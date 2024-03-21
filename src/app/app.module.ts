@@ -6,13 +6,15 @@ import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
 import { ChatPageComponent } from './chat-page/chat-page.component';
+import { NotFoundComponent } from './not-found/not-found.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
     RegisterComponent,
-    ChatPageComponent
+    ChatPageComponent,
+    NotFoundComponent
   ],
   imports: [
     BrowserModule,
