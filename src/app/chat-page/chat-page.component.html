@@ -1,55 +1,70 @@
 <div class=" h-dvh bg-violet-900 overflow-hidden">
     <div class="row pt-4">
-        <div class="chat-container p-3 shadow rounded-3 overflow-hidden position-relative p-0 h-dvh col-md-5 m-auto bg-violet-100">
+        <div class="chat-container p-3 color-shadow rounded-3 overflow-hidden position-relative p-0 h-dvh col-md-5 m-auto bg-violet-100">
             <div class="chat-header bg-violet-50 shadow-sm rounded-sm p-3 w-100 absolute top-0 left-0">
                 <div class="chat-container-title font-bold text-2xl">Hey👋</div>
             </div>
-            <div class="chat-body p-3 mt-5 position-relative h-100">
-                <div class="msg-container-left d-flex justify-content-start mb-3">
-                    <img 
-                        style="width: 2rem;height:2rem;"
-                        class="col-1 rounded-circle mr-2" 
-                        src="https://cdn-icons-png.flaticon.com/512/149/149071.png" 
-                        alt="image">
-                    <div 
-                    class="chat-container-message bg-violet-200 p-3 py-2 rounded- shadow-sm"
-                    style="max-width: 80%;"
-                    >
-                        <div class="chat-user-name font-bold">Siva</div>
-                        <div class="chat-user-message">Lorem ipsum dolor sit amet consectetur adipisicing elit. Assumenda fugiat odit molestias dolore ea. Maiores deserunt eius tempore tempora maxime aut aliquid fugiat! Aliquam est dolor iste adipisci nobis fuga.</div>
-                        <div class="chat-time float-end text-violet-800 text-sm">12:30 am</div>
-                    </div>
-                </div>
-                <div class="msg-container-right d-flex justify-content-end">
-                    <div 
-                        class="
-                            chat-container-message 
-                            bg-yellow-300 
-                            p-3
-                            py-2
-                            rounded-4 
-                            shadow-sm"
+            <div class="chat-body p-3 my-5 position-relative overflow-auto" style="height: 80dvh;">
+                <ng-container *ngFor="let message of messages">
+                    <div *ngIf="message.sender != username" class="msg-container-left d-flex justify-content-start mb-3">
+                        <div class="chat-user relative mr-2" style="width: 2rem;height:2rem;">
+                            <img 
+                                class="rounded-circle mr-2" 
+                                src="https://cdn-icons-png.flaticon.com/512/149/149071.png" 
+                                alt="image">
+                            <div 
+                            class="active-icon absolute right-0"
+                            style="font-size: 0.7rem; bottom:-5px;"
+                            ><i class="fa-solid fa-circle text-green-500 fas-sm p-0 m-0"></i></div>
+                        </div>                 
+                        <div 
+                        class="chat-container-message bg-violet-200 p-3 py-2 rounded-4 shadow-sm"
                         style="max-width: 80%;"
                         >
-                        <div class="chat-user-name font-bold">You</div>
-                        <div class="chat-user-message">Lorem ipsum dolor sit amet consectetur adipisicing elit. Assumenda fugiat odit molestias dolore ea. Maiores deserunt eius tempore tempora maxime aut aliquid fugiat! Aliquam est dolor iste adipisci nobis fuga.</div>
-                        <div class="chat-time float-end text-yellow-800 text-sm">12:31 am</div>
+                            <div class="chat-user-name font-bold">{{message.sender}}</div>
+                            <div class="chat-user-message">{{message.text}}</div>
+                            <div class="chat-time float-end text-violet-800 text-sm">{{message.time}}</div>
+                        </div>
                     </div>
-                    <img 
-                        style="width: 2rem;height:2rem;"
-                        class="col-1 rounded-circle ml-2" 
-                        src="https://cdn-icons-png.flaticon.com/512/149/149071.png" 
-                        alt="image">
-                </div>
-                <div class="chat-box d-flex w-100 p-1 rounded-pill bg-violet-200 absolute" style="bottom: 5rem;right:0;">
+                    <div *ngIf="message.sender == username" class="msg-container-right d-flex justify-content-end mb-3">
+                        <div 
+                            class="
+                                chat-container-message 
+                                bg-yellow-300 
+                                p-3
+                                py-2
+                                rounded-4 
+                                shadow-sm"
+                            style="max-width: 80%;"
+                            >
+                            <div class="chat-user-name font-bold">You</div>
+                            <div class="chat-user-message">{{message.text}}</div>
+                            <div class="chat-time float-end text-yellow-800 text-sm">{{message.time}}</div>
+                        </div>
+                        <img 
+                            style="width: 2rem;height:2rem;"
+                            class="col-1 rounded-circle ml-2" 
+                            src="https://cdn-icons-png.flaticon.com/512/149/149071.png" 
+                            alt="image">
+                    </div>
+
+                </ng-container>
+            </div>
+            <div class="absolute px-3" style="bottom:2rem;left:0;right:0;">
+                <div class="chat-box d-flex p-1  rounded-pill bg-violet-200">
                     <input 
-                        class="w-100 rounded-pill mr-2 p-3 text-2xl text-violet-800"
+                        class="w-100 rounded-pill mr-2 px-3 text-md text-violet-900"
+                        [(ngModel)]="message"
+                        (keydown.enter)="sendMsg()"
                         type="text">
                     <button
-                        class="bg-violet-800 p-3 rounded-circle text-light"
-                        style="width: 4.3rem;"
-                    ><i class="fa-solid fa-paper-plane"></i></button>
+                        class="send-btn bg-violet-800 d-flex p-3 rounded-pill text-light"
+                        (click)="sendMsg()"
+                    >
+                    <i class="fa-solid fa-paper-plane py-1"></i>
+                    <span id="sendText">Send</span></button>
                 </div>
+
             </div>
         </div>
     </div>

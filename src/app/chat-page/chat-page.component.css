@@ -1,0 +1,59 @@
+.send-btn {
+    width: 3.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.3s ease-in-out;
+}
+
+#sendText {
+    margin-left: 0.7rem;
+    display: none;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.send-btn:hover {
+    width: max-content;
+    transition: 3s ease-in;
+}
+
+.send-btn:hover #sendText {
+    display: inline;
+}
+
+.color-shadow {
+    --box-shadow-color: rgba(240, 46, 170, 0.4);
+    transition: 0.3s ease-in;
+    /* box-shadow: var(--box-shadow-color) 0px 10px 20px, var(--box-shadow-color) 0px 6px 6px; */
+}
+
+.color-shadow:hover {
+    transition: 0.3s ease-in;
+    --box-shadow-color: rgb(85, 32, 218);
+    box-shadow: var(--box-shadow-color) 0px 8px 24px, var(--box-shadow-color) 0px 16px 56px, var(--box-shadow-color) 0px 24px 80px;
+
+}
+
+.chat-body {
+    /* Set a fixed width for the scrollbar */
+    scrollbar-width:thin;
+    scrollbar-color: #d4c7e0 #f4f4f4; /* Change the color of the scrollbar (track color, thumb color) */
+}
+
+/* Style the scrollbar track */
+.chat-body::-webkit-scrollbar {
+    width: 1px; /* Set the width of the scrollbar */
+}
+
+/* Style the scrollbar thumb */
+.chat-body::-webkit-scrollbar-thumb {
+    background-color: #888; /* Set the color of the scrollbar thumb */
+    border-radius: 50px; /* Set the border radius of the scrollbar thumb */
+    width: 1px; 
+}
+
+/* Style the scrollbar track on hover */
+.chat-body::-webkit-scrollbar-track {
+    background-color: #f4f4f4; /* Set the color of the scrollbar track */
+}
