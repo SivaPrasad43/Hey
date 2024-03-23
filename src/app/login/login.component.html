@@ -1,1 +1,18 @@
-<p>login works!</p>
+<form (ngSubmit)="login()">
+    <input
+      type="text"
+      name="email"
+      [(ngModel)]="email"
+      placeholder="Enter email"
+      id="email">
+      <br>
+    <input
+      type="password"
+      name="password"
+      [(ngModel)]="password"
+      placeholder="Enter password"
+      id="password">
+      <br>
+      <button id="loginBtn" type="submit">Login</button>
+      <button id="registerBtn" type="button" routerLink="/register">Register</button>
+</form>
