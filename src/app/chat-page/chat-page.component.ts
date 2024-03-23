@@ -1,4 +1,7 @@
 import { Component , OnInit } from '@angular/core';
+import { Observable } from 'rxjs';
+
+import { DataService } from 'src/services/data.service';
 
 @Component({
   selector: 'app-chat-page',
@@ -10,61 +13,68 @@ import { Component , OnInit } from '@angular/core';
 
 export class ChatPageComponent implements OnInit {
 
-  timeOnly: string;
-
   message: string = '';
 
-  messages: any[] = [
-    {
-      text: 'Hi, how are you?',
-      sender: 'bot',
-      time: new Date(),
-      activeStatus: false
-    },
-    {
-      text: 'I am good. What about you?',
-      sender: 'siva',
-      time: new Date(),
-      activeStatus: false
-    },
-    {
-      text: 'I am good. What about you?',
-      sender: 'siva',
-      time: new Date(),
-      activeStatus: false
-    },
-    {
-      text: 'What about you?',
-      sender: 'bot',
-      time: new Date(),
-      activeStatus: false
-    }
-  ]
+  messages: any[] = []
 
-  constructor() {
-    const currentTime = new Date();
-    const hours = currentTime.getHours();
-    const minutes = currentTime.getMinutes();
-    const seconds = currentTime.getSeconds();
+  emojiList: any[] = [
+    { emoji: '😊', mode: 'Happy', color:'violet' },
+    { emoji: '😡', mode: 'Angry', color:'red' },
+    { emoji: '🥺', mode: 'Sad', color:'blue' },
+    { emoji: '😍', mode: 'Lovely', color:'pink' },
+  ];
 
-    this.timeOnly = `${hours}:${minutes}:${seconds}`;
+  emojiMode: {
+    emoji: string,
+    mode: string,
+    color?: string
+  } = {
+    emoji: '😊',
+    mode: 'Happy',
+    color: 'violet'
+  }
+
+  constructor(
+    private dataService: DataService
+  ) {
   }
 
   username: string = 'siva';
 
   ngOnInit(): void {
-    this.messages.map((message) => {
-      message.time = this.timeOnly
-    })
+
+    this.dataService.getMsg().subscribe(messages => {
+      this.messages = messages;
+      this.messages.map(message => {
+        let timestampString = new Date(message.time.seconds * 1000).toUTCString(); 
+        let date = new Date(timestampString);
+        let hours = date.getHours();
+        let minutes = date.getMinutes();
+        let amOrPm = hours >= 12 ? 'PM' : 'AM';
+
+        // Convert hours from 24-hour to 12-hour format
+        let hours12 = hours % 12 || 12; // Ensure 12-hour format and handle 0 as 12
+
+        message.time = `${hours12}:${minutes.toString().padStart(2, '0')} ${amOrPm}`;  
+      })
+    });
   }
 
   sendMsg(){
-    this.messages.push({
+    let msgObj={
       text: this.message,
-      sender: 'siva',
-      time: this.timeOnly,
-      activeStatus: false
+      sender: 'malu',
+      time: new Date(),
+      mode: this.emojiMode.mode,
+      emoji: this.emojiMode.emoji
+    }
+    this.dataService.sendMsg(msgObj).then((data) => {
+      this.message = '';
+      console.log(data);
     })
-    this.message = '';
+  }
+
+  setEmoji(emoji: any){
+    this.emojiMode = emoji
   }
 }

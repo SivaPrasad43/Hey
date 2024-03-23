@@ -18,28 +18,49 @@
                             ><i class="fa-solid fa-circle text-green-500 fas-sm p-0 m-0"></i></div>
                         </div>                 
                         <div 
-                        class="chat-container-message bg-violet-200 p-3 py-2 rounded-4 shadow-sm"
+                        class="chat-container-message p-3 py-2 rounded-4 relative shadow-sm"
+                        [ngClass]="{
+                            'bg-slate-100': message.mode == 'Happy',
+                            'bg-red-300': message.mode == 'Angry',
+                            'bg-blue-300': message.mode == 'Sad',
+                            'bg-pink-300': message.mode == 'Lovely',
+                        }"
                         style="max-width: 80%;"
-                        >
+                        ><div 
+                        class="emoji-icon absolute" 
+                        style="top: -0.6rem;left: -0.6rem; font-size:1.3rem;"
+                    >{{message.emoji}}</div>
                             <div class="chat-user-name font-bold">{{message.sender}}</div>
                             <div class="chat-user-message">{{message.text}}</div>
-                            <div class="chat-time float-end text-violet-800 text-sm">{{message.time}}</div>
+                            <div class="chat-time float-end text-sm">{{message.time}}</div>
                         </div>
                     </div>
                     <div *ngIf="message.sender == username" class="msg-container-right d-flex justify-content-end mb-3">
                         <div 
                             class="
                                 chat-container-message 
-                                bg-yellow-300 
                                 p-3
                                 py-2
                                 rounded-4 
+                                relative
                                 shadow-sm"
+                            [ngClass]="{
+                                    'bg-slate-100': message.mode == 'Happy',
+                                    'bg-red-300': message.mode == 'Angry',
+                                    'bg-blue-300': message.mode == 'Sad',
+                                    'bg-pink-300': message.mode == 'Lovely',
+                                }"
                             style="max-width: 80%;"
                             >
+                            <div 
+                                class="emoji-icon absolute" 
+                                style="top: -0.6rem;right: -0.6rem; font-size:1.3rem;"
+                            >{{message.emoji}}</div>
                             <div class="chat-user-name font-bold">You</div>
-                            <div class="chat-user-message">{{message.text}}</div>
-                            <div class="chat-time float-end text-yellow-800 text-sm">{{message.time}}</div>
+                            <div class="chat-user-message text-wrap">
+                                <p class="text-wrap" style="word-wrap: break-word;">{{message.text}}</p>
+                            </div>
+                            <div class="chat-time float-end text-slate-800" style="font-size: 0.8rem;">{{message.time}}</div>
                         </div>
                         <img 
                             style="width: 2rem;height:2rem;"
@@ -51,14 +72,48 @@
                 </ng-container>
             </div>
             <div class="absolute px-3" style="bottom:2rem;left:0;right:0;">
-                <div class="chat-box d-flex p-1  rounded-pill bg-violet-200">
+                <div class="chat-box d-flex p-1  rounded-pill"
+                [ngClass]="{
+                    'bg-violet-200': emojiMode.mode == 'Happy',
+                    'bg-red-200': emojiMode.mode == 'Angry',
+                    'bg-blue-200': emojiMode.mode == 'Sad',
+                    'bg-pink-200': emojiMode.mode == 'Lovely',
+                }"
+                >
                     <input 
-                        class="w-100 rounded-pill mr-2 px-3 text-md text-violet-900"
+                        class="w-100 rounded-pill mr-2 px-3 text-md"
                         [(ngModel)]="message"
                         (keydown.enter)="sendMsg()"
                         type="text">
+                    <div class="dropdown">
+                        <button
+                        class="emojiBtn mr-2 d-flex rounded-pill text-light"
+                        [ngClass]="{
+                            'bg-violet-300': emojiMode.mode == 'Happy',
+                            'bg-red-300': emojiMode.mode == 'Angry',
+                            'bg-blue-300': emojiMode.mode == 'Sad',
+                            'bg-pink-300': emojiMode.mode == 'Lovely',
+                        }"
+                        type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                    ><span class="p-2" style="font-size: 1.5rem;">{{emojiMode.emoji}}</span>
+                    </button>
+                        <ul class="dropdown-menu shadow p-0">
+                          <li *ngFor="let emoji of emojiList" (click)="setEmoji(emoji)">
+                            <div class="emoji-drop-item p-2">
+                                <span class="p-2">{{emoji.emoji}}</span>{{emoji.mode}}
+                            </div>
+                            <hr>
+                          </li>
+                        </ul>
+                      </div>
                     <button
-                        class="send-btn bg-violet-800 d-flex p-3 rounded-pill text-light"
+                        class="send-btn d-flex p-3 rounded-pill text-light"
+                        [ngClass]="{
+                            'bg-violet-500': emojiMode.mode == 'Happy',
+                            'bg-red-500': emojiMode.mode == 'Angry',
+                            'bg-sky-500': emojiMode.mode == 'Sad',
+                            'bg-pink-500': emojiMode.mode == 'Lovely',
+                        }"
                         (click)="sendMsg()"
                     >
                     <i class="fa-solid fa-paper-plane py-1"></i>
