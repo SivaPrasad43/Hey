@@ -6,6 +6,7 @@ import { DataService } from 'src/services/data.service';
 import { AuthService } from 'src/services/auth.service';
 
 import * as AOS from 'aos';
+import * as moment from 'moment-timezone';
 
 
 @Component({
@@ -18,7 +19,7 @@ import * as AOS from 'aos';
 
 export class ChatPageComponent implements OnInit {
 
-  @ViewChild('chatBody', { static: false }) chatBody!: ElementRef;
+  @ViewChild('chatBody') chatBody!: ElementRef;
 
   message: string = '';
 
@@ -62,6 +63,7 @@ export class ChatPageComponent implements OnInit {
     })
 
     this.dataService.getMsg().subscribe(messages => {
+      let lastMsgMode = ""
       this.messages = messages;
       console.log("messages", this.messages)
       if (this.chatBody) {
@@ -74,13 +76,17 @@ export class ChatPageComponent implements OnInit {
         let minutes = date.getMinutes();
         let amOrPm = hours >= 12 ? 'PM' : 'AM';
 
+        if(!message.isJoined && message.text){
+          lastMsgMode = message.mode
+        }
+
         // Convert hours from 24-hour to 12-hour format
         let hours12 = hours % 12 || 12; // Ensure 12-hour format and handle 0 as 12
 
         message.time = `${hours12}:${minutes.toString().padStart(2, '0')} ${amOrPm}`;  
       })
 
-      // this.shadowMode = this.messages[this.messages.length - 1].mode
+      this.shadowMode = lastMsgMode
     });
   }
 
@@ -97,6 +103,7 @@ export class ChatPageComponent implements OnInit {
       isJoined: false
     }
     this.dataService.sendMsg(msgObj).then((data) => {
+      this.scrollToBottom();
       this.message = '';
       console.log(data);
     })
@@ -117,5 +124,12 @@ export class ChatPageComponent implements OnInit {
       }).then(() => {
       this.authService.logout();
     })
+  }
+
+  scrollToBottom(): void {
+    try {
+      // Scroll to the bottom of the container
+      this.chatBody.nativeElement.scrollTop = this.chatBody.nativeElement.scrollHeight;
+    } catch(err) { }
   }
 }

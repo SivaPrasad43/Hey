@@ -22,6 +22,7 @@
     "aos": "^3.0.0-beta.6",
     "bootstrap": "^5.3.3",
     "firebase": "^10.9.0",
+    "moment-timezone": "^0.5.45",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.13.0"
@@ -32,6 +33,7 @@
     "@angular/compiler-cli": "^16.2.0",
     "@types/aos": "^3.0.7",
     "@types/jasmine": "~4.3.0",
+    "@types/moment-timezone": "^0.5.30",
     "autoprefixer": "^10.4.19",
     "jasmine-core": "~4.6.0",
     "karma": "~6.4.0",

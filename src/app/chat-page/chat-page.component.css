@@ -75,6 +75,7 @@
     /* Set a fixed width for the scrollbar */
     scrollbar-width:thin;
     scrollbar-color: #d4c7e0 #f4f4f4; /* Change the color of the scrollbar (track color, thumb color) */
+    scroll-behavior: smooth;
 }
 
 /* Style the scrollbar track */
