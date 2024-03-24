@@ -1,18 +1,56 @@
-<form (ngSubmit)="login()">
-    <input
-      type="text"
-      name="email"
-      [(ngModel)]="email"
-      placeholder="Enter email"
-      id="email">
-      <br>
-    <input
-      type="password"
-      name="password"
-      [(ngModel)]="password"
-      placeholder="Enter password"
-      id="password">
-      <br>
-      <button id="loginBtn" type="submit">Login</button>
-      <button id="registerBtn" type="button" routerLink="/register">Register</button>
-</form>
+<div class="container bg-black h-dvh d-flex align-items-center justify-content-center">
+  <div class="login-container col-md-3 p-3 bg-violet-800 rounded-3 relative overflow-hidden">
+    <form (ngSubmit)="login()">
+      <h1 
+        class="p-3 font-bold w-100 bg-white absolute top-0 left-0 text-center"
+        style="font-size: 1.7rem;"
+        >Hey👋</h1>
+        <div class="d-flex mt-5">
+          <h1 class="my-4 d-flex justify-content-center" style="font-size: 5rem;">😊</h1>
+          <h1 class="my-4 d-flex justify-content-center" style="font-size: 5rem;">🥺</h1>
+          <h1 class="my-4 d-flex justify-content-center" style="font-size: 5rem;">😡</h1>
+        </div>
+        <div class="mb-3">
+          <h1 class="font-bold text-white" style="font-size: 2rem;">Login</h1>
+          <small class="text-slate-300">Enter your credentials to login</small>
+        </div>
+        <div 
+          class="d-flex align-items-center form-control"
+          >
+          <i class="fa-regular fa-envelope mr-2"></i>
+          <input
+            type="text"
+            name="email"
+            class="w-100"
+            [(ngModel)]="email"
+            placeholder="Enter email"
+            id="email">
+        </div>
+          <br>
+          <div class="d-flex align-items-center form-control">
+            <i class="fa-solid fa-lock mr-2"></i>
+            <input
+              type="password"
+              class="w-100"
+              name="password"
+              [(ngModel)]="password"
+              placeholder="Enter password"
+              id="password">
+          </div>
+          <br>
+          <button 
+            id="loginBtn"
+            type="button"
+            class="text-violet-800 fond-bold w-100 bg-violet-300 hover:bg-violet-500 hover:text-white focus:ring-4 focus:ring-violet-300 font-medium rounded-lg px-5 py-2.5 me-2 mb-2"
+            style="font-size: 1rem;"
+            type="submit"
+            > <strong>Login</strong> </button>
+            <p class="m-auto text-center py-2 text-slate-300">Don't have an account? 
+              <a 
+                class="text-white"
+                routerLink="/register">
+             <strong>Create one</strong>
+            </a></p>
+    </form>
+  </div>
+</div>

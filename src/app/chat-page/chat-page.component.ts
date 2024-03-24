@@ -1,7 +1,12 @@
-import { Component , OnInit } from '@angular/core';
+import { Component , OnInit, ViewChild, ElementRef } from '@angular/core';
 import { Observable } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 
 import { DataService } from 'src/services/data.service';
+import { AuthService } from 'src/services/auth.service';
+
+import * as AOS from 'aos';
+
 
 @Component({
   selector: 'app-chat-page',
@@ -12,6 +17,8 @@ import { DataService } from 'src/services/data.service';
 
 
 export class ChatPageComponent implements OnInit {
+
+  @ViewChild('chatBody', { static: false }) chatBody!: ElementRef;
 
   message: string = '';
 
@@ -35,16 +42,31 @@ export class ChatPageComponent implements OnInit {
   }
 
   constructor(
-    private dataService: DataService
+    private dataService: DataService,
+    private authService: AuthService,
+    private router: ActivatedRoute
   ) {
   }
 
-  username: string = 'siva';
+  userId: string = "";
+  username: string = "";
+  shadowMode: string = "Happy";
 
   ngOnInit(): void {
 
+    AOS.init();
+
+    this.router.queryParams.subscribe(params => {
+      this.userId = params['userId'];
+      this.username = params['userName'];
+    })
+
     this.dataService.getMsg().subscribe(messages => {
       this.messages = messages;
+      console.log("messages", this.messages)
+      if (this.chatBody) {
+        this.chatBody.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
       this.messages.map(message => {
         let timestampString = new Date(message.time.seconds * 1000).toUTCString(); 
         let date = new Date(timestampString);
@@ -57,16 +79,22 @@ export class ChatPageComponent implements OnInit {
 
         message.time = `${hours12}:${minutes.toString().padStart(2, '0')} ${amOrPm}`;  
       })
+
+      // this.shadowMode = this.messages[this.messages.length - 1].mode
     });
   }
 
   sendMsg(){
+    console.log(this.username)
     let msgObj={
       text: this.message,
-      sender: 'malu',
+      senderId: this.userId,
+      sender: this.username,
       time: new Date(),
       mode: this.emojiMode.mode,
-      emoji: this.emojiMode.emoji
+      emoji: this.emojiMode.emoji,
+      isOnline: true,
+      isJoined: false
     }
     this.dataService.sendMsg(msgObj).then((data) => {
       this.message = '';
@@ -76,5 +104,18 @@ export class ChatPageComponent implements OnInit {
 
   setEmoji(emoji: any){
     this.emojiMode = emoji
+  }
+
+  logout(){
+    
+    this.dataService.sendMsg(
+      {
+        userId: this.userId,
+        userName: this.username,
+        time: new Date(),
+        isJoined: false
+      }).then(() => {
+      this.authService.logout();
+    })
   }
 }

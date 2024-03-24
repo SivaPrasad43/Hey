@@ -1,0 +1,13 @@
+.profile-image-container{
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    margin: 0 auto;
+}
+
+input:focus {
+    outline: none;
+    box-shadow: none;
+}

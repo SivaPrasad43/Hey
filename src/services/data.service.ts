@@ -20,6 +20,7 @@ export class DataService {
       map(actions => {
         return actions.map(a => {
           const data = a.payload.doc.data() as any;
+          console.log('data', data)
           const id = a.payload.doc.id;
           return { id, ...data };
         });

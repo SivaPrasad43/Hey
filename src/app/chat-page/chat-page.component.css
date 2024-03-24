@@ -31,15 +31,42 @@
     display: inline;
 }
 
-.color-shadow {
-    --box-shadow-color: rgba(240, 46, 170, 0.4);
+.happy-shadow{
     transition: 0.3s ease-in;
-    /* box-shadow: var(--box-shadow-color) 0px 10px 20px, var(--box-shadow-color) 0px 6px 6px; */
+}
+.happy-shadow:hover {
+    transition: 0.3s ease-in;
+    --box-shadow-color: rgb(158, 88, 255);
+    box-shadow: var(--box-shadow-color) 0px 8px 24px, var(--box-shadow-color) 0px 16px 56px, var(--box-shadow-color) 0px 24px 80px;
+
 }
 
-.color-shadow:hover {
+.sad-shadow{
     transition: 0.3s ease-in;
-    --box-shadow-color: rgb(85, 32, 218);
+}
+.sad-shadow:hover {
+    transition: 0.3s ease-in;
+    --box-shadow-color: rgb(88, 180, 255);
+    box-shadow: var(--box-shadow-color) 0px 8px 24px, var(--box-shadow-color) 0px 16px 56px, var(--box-shadow-color) 0px 24px 80px;
+
+}
+
+.angry-shadow{
+    transition: 0.3s ease-in;
+}
+.angry-shadow:hover {
+    transition: 0.3s ease-in;
+    --box-shadow-color: rgb(255, 88, 88);
+    box-shadow: var(--box-shadow-color) 0px 8px 24px, var(--box-shadow-color) 0px 16px 56px, var(--box-shadow-color) 0px 24px 80px;
+
+}
+
+.lovely-shadow{
+    transition: 0.3s ease-in;
+}
+.lovely-shadow:hover {
+    transition: 0.3s ease-in;
+    --box-shadow-color: rgb(255, 88, 210);
     box-shadow: var(--box-shadow-color) 0px 8px 24px, var(--box-shadow-color) 0px 16px 56px, var(--box-shadow-color) 0px 24px 80px;
 
 }
@@ -65,4 +92,17 @@
 /* Style the scrollbar track on hover */
 .chat-body::-webkit-scrollbar-track {
     background-color: #f4f4f4; /* Set the color of the scrollbar track */
+}
+
+@keyframes slide-up {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+.chat-container{
+    animation: slide-up 0.4s ease-in;
 }
