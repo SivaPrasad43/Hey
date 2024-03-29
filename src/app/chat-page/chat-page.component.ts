@@ -1,12 +1,8 @@
 import { Component , OnInit, ViewChild, ElementRef } from '@angular/core';
-import { Observable } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 
 import { DataService } from 'src/services/data.service';
 import { AuthService } from 'src/services/auth.service';
-
-import * as AOS from 'aos';
-import * as moment from 'moment-timezone';
 
 
 @Component({
@@ -54,8 +50,6 @@ export class ChatPageComponent implements OnInit {
   shadowMode: string = "Happy";
 
   ngOnInit(): void {
-
-    AOS.init();
 
     this.router.queryParams.subscribe(params => {
       this.userId = params['userId'];

@@ -2,3 +2,16 @@ input:focus {
     outline: none;
     box-shadow: none;
 }
+/* Remove yellow background color for all input fields */
+input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px white inset !important; /* Change the color to whatever you want */
+}
+
+/* Optionally, remove the border and outline for the input field */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    border: 1px solid transparent !important;
+    outline: none !important;
+}

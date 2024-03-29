@@ -1,7 +1,6 @@
 <div class=" h-dvh bg-black overflow-hidden">
     <div class="row pt-4">
-        <div 
-            data-aos="fade-up" 
+        <div  
             class="chat-container p-3 rounded-3 overflow-hidden position-relative p-0 h-dvh col-md-5 m-auto bg-violet-100"
             [ngClass]="{
                 'happy-shadow': shadowMode === 'Happy',
@@ -13,13 +12,21 @@
             <div class="chat-header d-flex align-center justify-content-between bg-violet-50 shadow-sm rounded-sm p-3 w-100 absolute top-0 left-0">
                 <div class="chat-container-title font-bold text-2xl">Hey👋</div>
                 <div class="d-flex align-items-center">
-                    <img 
-                                class="rounded-circle mr-4" 
-                                style="width: 2rem;height:2rem;"
-                                (click)="logout()"
-                                src="https://cdn-icons-png.flaticon.com/512/149/149071.png" 
-                                alt="image">
+                    <div class="dropdown">
+                        <img 
+                        class="rounded-circle mr-4 dropdown-toggle" 
+                        style="width: 2rem;height:2rem;"
+                        id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"
+                        src="https://cdn-icons-png.flaticon.com/512/149/149071.png" 
+                        alt="image">
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                          <li 
+                            (click)="logout()"
+                            class="dropdown-item"><i class="fa-solid fa-arrow-right-from-bracket text-danger mr-3"></i>Logout</li>
+                        </ul>
+                      </div>
                 </div>
+                
             </div>
             <div #chatBody class="chat-body p-3 my-5 position-relative overflow-auto" style="height: 80dvh;">
                 <ng-container *ngFor="let message of messages">

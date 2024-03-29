@@ -103,7 +103,3 @@
         transform: translateY(0);
     }
 }
-
-.chat-container{
-    animation: slide-up 0.4s ease-in;
-}
