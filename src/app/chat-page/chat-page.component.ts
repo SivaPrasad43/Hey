@@ -101,7 +101,6 @@ export class ChatPageComponent implements OnInit {
       isJoined: false
     }
     this.dataService.sendMsg(msgObj).then((data) => {
-      this.scrollToBottom();
       this.message = '';
       console.log(data);
     })
