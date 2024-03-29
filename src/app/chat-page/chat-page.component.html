@@ -14,8 +14,7 @@
                 <div class="d-flex align-items-center">
                     <div class="dropdown">
                         <img 
-                        class="rounded-circle mr-4 dropdown-toggle" 
-                        style="width: 2rem;height:2rem;"
+                        class="rounded-circle mr-4 dropdown-toggle profile-img" 
                         id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"
                         src="https://cdn-icons-png.flaticon.com/512/149/149071.png" 
                         alt="image">
@@ -39,7 +38,7 @@
                     
                     <ng-container *ngIf="message.text != undefined">
                         <div *ngIf="message.senderId != userId" class="msg-container-left d-flex justify-content-start mb-3">
-                            <div class="chat-user relative mr-2" style="width: 2rem;height:2rem;">
+                            <div class="chat-user relative mr-2 profile-img">
                                 <img 
                                     class="rounded-circle mr-2" 
                                     src="https://cdn-icons-png.flaticon.com/512/149/149071.png" 
@@ -95,8 +94,7 @@
                                 <div class="chat-time float-end text-slate-800" style="font-size: 0.8rem;">{{ message.time }}</div>
                             </div>
                             <img 
-                                style="width: 2rem;height:2rem;"
-                                class="col-1 rounded-circle ml-2" 
+                                class="col-1 rounded-circle ml-2 profile-img" 
                                 src="https://cdn-icons-png.flaticon.com/512/149/149071.png" 
                                 alt="image">
                         </div>
