@@ -27,7 +27,7 @@
                 </div>
                 
             </div>
-            <div #chatBody class="chat-body p-3 my-5 position-relative overflow-auto" style="height: 80dvh;">
+            <div #chatBody class="chat-body p-md-3 p-1 my-5 position-relative overflow-auto" style="height: 80dvh;">
                 <ng-container *ngFor="let message of messages">
                     <ng-container *ngIf="message.isJoined && message.text == undefined">
                         <p class="text-center mb-2 text-sm"> <strong>{{message.userName}}</strong> Joined in this chat</p>

@@ -1,5 +1,6 @@
-import { Component , OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component , OnInit, ViewChild, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { ChangeDetectorRef } from '@angular/core';
 
 import { DataService } from 'src/services/data.service';
 import { AuthService } from 'src/services/auth.service';
@@ -41,7 +42,8 @@ export class ChatPageComponent implements OnInit {
   constructor(
     private dataService: DataService,
     private authService: AuthService,
-    private router: ActivatedRoute
+    private router: ActivatedRoute,
+    private changeDetectorRef: ChangeDetectorRef
   ) {
   }
 
@@ -60,9 +62,7 @@ export class ChatPageComponent implements OnInit {
       let lastMsgMode = ""
       this.messages = messages;
       console.log("messages", this.messages)
-      if (this.chatBody) {
-        this.chatBody.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      }
+      this.scrollToBottom(); 
       this.messages.map(message => {
         let timestampString = new Date(message.time.seconds * 1000).toUTCString(); 
         let date = new Date(timestampString);
@@ -83,6 +83,10 @@ export class ChatPageComponent implements OnInit {
       this.shadowMode = lastMsgMode
     });
   }
+
+  ngAfterViewChecked() {        
+    this.scrollToBottom();        
+} 
 
   sendMsg(){
     console.log(this.username)
@@ -122,8 +126,7 @@ export class ChatPageComponent implements OnInit {
 
   scrollToBottom(): void {
     try {
-      // Scroll to the bottom of the container
-      this.chatBody.nativeElement.scrollTop = this.chatBody.nativeElement.scrollHeight;
-    } catch(err) { }
-  }
+        this.chatBody.nativeElement.scrollTop = this.chatBody.nativeElement.scrollHeight;
+    } catch(err) { }                 
+}
 }
