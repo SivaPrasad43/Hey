@@ -1,4 +1,4 @@
-import { Component , OnInit, ViewChild, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
+import { Component , OnInit, ViewChild, ElementRef, OnChanges, SimpleChanges, HostListener } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ChangeDetectorRef } from '@angular/core';
 
@@ -39,6 +39,13 @@ export class ChatPageComponent implements OnInit {
     color: 'violet'
   }
 
+  shortcuts:any = {
+    'alt+a': { emoji: '😡', mode: 'Angry', color:'red' },
+    'alt+h' : { emoji: '😊', mode: 'Happy', color:'violet' },
+    'alt+s' : { emoji: '🥺', mode: 'Sad', color:'blue' },
+    'alt+l' : { emoji: '😍', mode: 'Lovely', color:'pink' },
+  }
+
   constructor(
     private dataService: DataService,
     private authService: AuthService,
@@ -62,7 +69,6 @@ export class ChatPageComponent implements OnInit {
       let lastMsgMode = ""
       this.messages = messages;
       console.log("messages", this.messages)
-      this.scrollToBottom(); 
       this.messages.map(message => {
         let timestampString = new Date(message.time.seconds * 1000).toUTCString(); 
         let date = new Date(timestampString);
@@ -78,15 +84,12 @@ export class ChatPageComponent implements OnInit {
         let hours12 = hours % 12 || 12; // Ensure 12-hour format and handle 0 as 12
 
         message.time = `${hours12}:${minutes.toString().padStart(2, '0')} ${amOrPm}`;  
+        this.scrollToBottom(); 
       })
 
       this.shadowMode = lastMsgMode
     });
   }
-
-  ngAfterViewChecked() {        
-    this.scrollToBottom();        
-} 
 
   sendMsg(){
     console.log(this.username)
@@ -100,8 +103,12 @@ export class ChatPageComponent implements OnInit {
       isOnline: true,
       isJoined: false
     }
+    this.message = '';
+    this.loadMsg(msgObj)
+  }
+
+  loadMsg(msgObj:any){
     this.dataService.sendMsg(msgObj).then((data) => {
-      this.message = '';
       console.log(data);
     })
   }
@@ -127,5 +134,15 @@ export class ChatPageComponent implements OnInit {
     try {
         this.chatBody.nativeElement.scrollTop = this.chatBody.nativeElement.scrollHeight;
     } catch(err) { }                 
+}
+
+ // Helper method to generate the key combination (e.g., "Ctrl+S")
+ getKeyCombination(event: KeyboardEvent): string {
+  let combination = '';
+  if (event.ctrlKey) combination += 'Ctrl+';
+  if (event.altKey) combination += 'Alt+';
+  if (event.shiftKey) combination += 'Shift+';
+  combination += event.key;
+  return combination;
 }
 }

@@ -1,7 +1,7 @@
 <div class=" h-dvh bg-black overflow-hidden">
     <div class="row pt-4">
         <div  
-            class="chat-container p-3 rounded-3 overflow-hidden position-relative p-0 h-dvh col-md-5 m-auto bg-violet-100"
+            class="chat-container p-3 rounded-5 overflow-hidden position-relative p-0 h-dvh col-md-5 m-auto bg-violet-100"
             [ngClass]="{
                 'happy-shadow': shadowMode === 'Happy',
                 'sad-shadow': shadowMode === 'Sad',
@@ -9,7 +9,7 @@
                 'lovely-shadow': shadowMode === 'Lovely'
             }"
             >
-            <div class="chat-header d-flex align-center justify-content-between bg-violet-50 shadow-sm rounded-sm p-3 w-100 absolute top-0 left-0">
+            <div class="chat-header d-flex align-center justify-content-between bg-violet-50 shadow-sm rounded-sm p-4 w-100 absolute top-0 left-0">
                 <div class="chat-container-title font-bold text-2xl">Hey👋</div>
                 <div class="d-flex align-items-center">
                     <div class="dropdown">
@@ -102,7 +102,8 @@
                 </ng-container>
             </div>
             <div class="absolute px-3" style="bottom:2rem;left:0;right:0;">
-                <div class="chat-box d-flex p-1  rounded-pill"
+                <div class="chat-box d-flex p-1  rounded-pill position-relative"
+                style="height: 3.5rem;"
                 [ngClass]="{
                     'bg-violet-200': emojiMode.mode == 'Happy',
                     'bg-red-200': emojiMode.mode == 'Angry',
@@ -111,46 +112,57 @@
                 }"
                 >
                     <input 
-                        class="w-100 rounded-pill mr-2 px-3 text-md"
+                        style="margin-right: 3.5rem;"
+                        class="w-100 rounded-pill px-3 text-md"
                         [(ngModel)]="message"
                         (keydown.enter)="sendMsg()"
                         autocomplete="off"
                         placeholder="Write a message..."
                         type="text">
-                    <div class="dropdown">
-                        <button
-                        class="emojiBtn d-flex rounded-pill text-light"
-                        [ngClass]="{
-                            'bg-violet-300': emojiMode.mode == 'Happy',
-                            'bg-red-300': emojiMode.mode == 'Angry',
-                            'bg-blue-300': emojiMode.mode == 'Sad',
-                            'bg-pink-300': emojiMode.mode == 'Lovely',
-                        }"
-                        type="button" data-bs-toggle="dropdown" aria-expanded="false"
-                    ><span class="p-2" style="font-size: 1.5rem;">{{emojiMode.emoji}}</span>
+
+                    <div class="position-relative">
+                        <div class="emoji-container position-absolute right-0 bottom-0 d-flex flex-column justify-content-end">
+                            <ng-container *ngFor="let emoji of emojiList; let i = index">
+                                <button
+                                    [attr.id]="'emoji_'+i"
+                                    *ngIf="emoji.mode != emojiMode.mode"
+                                    (click)="setEmoji(emoji)"
+                                    class="roundButton d-flex rounded-pill text-light mb-1"
+                                    [ngClass]="{
+                                        'bg-violet-300': emoji.mode == 'Happy',
+                                        'bg-red-300': emoji.mode == 'Angry',
+                                        'bg-blue-300': emoji.mode == 'Sad',
+                                        'bg-pink-300': emoji.mode == 'Lovely',
+                                    }"
+                                    type="button"
+                                ><span class="p-2" style="font-size: 1.5rem;">{{emoji.emoji}}</span>
+                                </button>
+                            </ng-container>
+                            <button
+                                id="activeEmoji"
+                                class="roundButton activeEmoji d-flex rounded-pill text-light"
+                                [ngClass]="{
+                                    'bg-violet-300': emojiMode.mode == 'Happy',
+                                    'bg-red-300': emojiMode.mode == 'Angry',
+                                    'bg-blue-300': emojiMode.mode == 'Sad',
+                                    'bg-pink-300': emojiMode.mode == 'Lovely',
+                                }"
+                                type="button"
+                            ><span class="p-2" style="font-size: 1.5rem;">{{emojiMode.emoji}}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button *ngIf="message != ''" class="send-btn ml-2 d-flex p-3 rounded-pill text-light" [ngClass]="{
+                                                'bg-violet-500': emojiMode.mode == 'Happy',
+                                                'bg-red-500': emojiMode.mode == 'Angry',
+                                                'bg-sky-500': emojiMode.mode == 'Sad',
+                                                'bg-pink-500': emojiMode.mode == 'Lovely',
+                                            }" (click)="sendMsg()">
+                        <i class="fa-solid fa-paper-plane py-1"></i>
+                        <span id="sendText">Send</span>
                     </button>
-                        <ul class="dropdown-menu shadow p-0">
-                          <li *ngFor="let emoji of emojiList" (click)="setEmoji(emoji)">
-                            <div class="emoji-drop-item p-2">
-                                <span class="p-2">{{emoji.emoji}}</span>{{emoji.mode}}
-                            </div>
-                            <hr>
-                          </li>
-                        </ul>
-                      </div>
-                    <button
-                        *ngIf="message != ''"
-                        class="send-btn ml-2 d-flex p-3 rounded-pill text-light"
-                        [ngClass]="{
-                            'bg-violet-500': emojiMode.mode == 'Happy',
-                            'bg-red-500': emojiMode.mode == 'Angry',
-                            'bg-sky-500': emojiMode.mode == 'Sad',
-                            'bg-pink-500': emojiMode.mode == 'Lovely',
-                        }"
-                        (click)="sendMsg()"
-                    >
-                    <i class="fa-solid fa-paper-plane py-1"></i>
-                    <span id="sendText">Send</span></button>
+                    
                 </div>
 
             </div>
