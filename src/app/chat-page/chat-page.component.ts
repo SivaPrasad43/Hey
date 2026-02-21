@@ -21,6 +21,9 @@ export class ChatPageComponent implements OnInit {
   message: string = '';
 
   messages: any[] = []
+  allMessages: any[] = []
+  messageLimit: number = 20;
+  isLoadingMore: boolean = false;
 
   emojiList: any[] = [
     { emoji: '😊', mode: 'Happy', color:'violet' },
@@ -56,7 +59,10 @@ export class ChatPageComponent implements OnInit {
 
   userId: string = "";
   username: string = "";
-  shadowMode: string = "Happy";
+  ambienceMode: string = "Happy";
+  isInitialLoad: boolean = true;
+  lastMessageCount: number = 0;
+  showScrollButton: boolean = false;
 
   ngOnInit(): void {
 
@@ -65,11 +71,11 @@ export class ChatPageComponent implements OnInit {
       this.username = params['userName'];
     })
 
-    this.dataService.getMsg().subscribe(messages => {
-      let lastMsgMode = ""
-      this.messages = messages;
-      console.log("messages", this.messages)
-      this.messages.map(message => {
+    this.dataService.getMsg(1000).subscribe(messages => {
+      let lastMsgMode = "Happy"
+      this.allMessages = messages;
+      
+      this.allMessages.map(message => {
         let timestampString = new Date(message.time.seconds * 1000).toUTCString(); 
         let date = new Date(timestampString);
         let hours = date.getHours();
@@ -80,18 +86,26 @@ export class ChatPageComponent implements OnInit {
           lastMsgMode = message.mode
         }
 
-        // Convert hours from 24-hour to 12-hour format
-        let hours12 = hours % 12 || 12; // Ensure 12-hour format and handle 0 as 12
-
+        let hours12 = hours % 12 || 12;
         message.time = `${hours12}:${minutes.toString().padStart(2, '0')} ${amOrPm}`;  
-        this.scrollToBottom(); 
       })
 
-      this.shadowMode = lastMsgMode
+      const shouldScrollToBottom = this.isInitialLoad || this.allMessages.length > this.lastMessageCount;
+      this.lastMessageCount = this.allMessages.length;
+      
+      this.messages = this.allMessages.slice(-this.messageLimit);
+      this.ambienceMode = lastMsgMode
+      
+      if(shouldScrollToBottom) {
+        setTimeout(() => this.scrollToBottom(), 100);
+        this.isInitialLoad = false;
+      }
     });
   }
 
   sendMsg(){
+    if(!this.message.trim()) return;
+    
     console.log(this.username)
     let msgObj={
       text: this.message,
@@ -105,6 +119,29 @@ export class ChatPageComponent implements OnInit {
     }
     this.message = '';
     this.loadMsg(msgObj)
+  }
+
+  handleEnter(event: any): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.sendMsg();
+    }
+  }
+
+  autoResize(event: any): void {
+    const textarea = event.target;
+    textarea.style.height = 'auto';
+    const scrollHeight = textarea.scrollHeight;
+    const lineHeight = 24;
+    const maxHeight = lineHeight * 3;
+    
+    if (scrollHeight > maxHeight) {
+      textarea.style.height = maxHeight + 'px';
+      textarea.style.overflowY = 'auto';
+    } else {
+      textarea.style.height = scrollHeight + 'px';
+      textarea.style.overflowY = 'hidden';
+    }
   }
 
   loadMsg(msgObj:any){
@@ -134,7 +171,34 @@ export class ChatPageComponent implements OnInit {
     try {
         this.chatBody.nativeElement.scrollTop = this.chatBody.nativeElement.scrollHeight;
     } catch(err) { }                 
-}
+  }
+
+  onScroll(event: any): void {
+    const element = event.target;
+    const isNearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 100;
+    this.showScrollButton = !isNearBottom;
+    
+    if (element.scrollTop < 100 && !this.isLoadingMore && this.messages.length < this.allMessages.length) {
+      this.loadMoreMessages();
+    }
+  }
+
+  loadMoreMessages(): void {
+    if (this.isLoadingMore) return;
+    
+    this.isLoadingMore = true;
+    const previousScrollHeight = this.chatBody.nativeElement.scrollHeight;
+    
+    this.messageLimit += 20;
+    const startIndex = Math.max(0, this.allMessages.length - this.messageLimit);
+    this.messages = this.allMessages.slice(startIndex);
+    
+    setTimeout(() => {
+      const newScrollHeight = this.chatBody.nativeElement.scrollHeight;
+      this.chatBody.nativeElement.scrollTop = newScrollHeight - previousScrollHeight;
+      this.isLoadingMore = false;
+    }, 100);
+  }
 
  // Helper method to generate the key combination (e.g., "Ctrl+S")
  getKeyCombination(event: KeyboardEvent): string {

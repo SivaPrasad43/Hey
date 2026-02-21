@@ -1,17 +1,184 @@
-input:focus {
-    outline: none;
-    box-shadow: none;
-}
-/* Remove yellow background color for all input fields */
-input:-webkit-autofill {
-    -webkit-box-shadow: 0 0 0 1000px white inset !important; /* Change the color to whatever you want */
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5d9f2;
+  padding: 2rem;
 }
 
-/* Optionally, remove the border and outline for the input field */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-    border: 1px solid transparent !important;
-    outline: none !important;
+.login-container {
+  width: 100%;
+  max-width: 400px;
+  background: #ffffff;
+  border-radius: 32px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 8px 32px rgba(255, 105, 180, 0.15);
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.login-title {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 3rem;
+  font-weight: 700;
+  color: #CF7EE5;
+  margin: 0 0 0.5rem 0;
+}
+
+.login-subtitle {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.95rem;
+  color: #94a3b8;
+  margin: 0;
+  font-weight: 500;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-group label {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.01em;
+}
+
+.input-field {
+  font-family: 'Quicksand', sans-serif;
+  padding: 0.875rem 1.25rem;
+  border: 2px solid #c9b3e0;
+  background: #fafbfc;
+  font-size: 0.95rem;
+  color: #2d2438;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.input-field::placeholder {
+  color: #9370b8;
+}
+
+.input-field:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: #b968d1;
+  box-shadow: 0 0 0 4px rgba(185, 104, 209, 0.15);
+  transform: translateY(-2px);
+}
+
+.input-field:-webkit-autofill,
+.input-field:-webkit-autofill:hover,
+.input-field:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #fafbfc inset;
+  -webkit-text-fill-color: #1e293b;
+  border: 2px solid #f1f5f9;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.login-btn {
+  font-family: 'Quicksand', sans-serif;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background: #CF7EE5;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(207, 126, 229, 0.3);
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(207, 126, 229, 0.4);
+  background: #b968d1;
+}
+
+.login-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 12px rgba(207, 126, 229, 0.3);
+}
+
+
+
+.signup-link {
+  font-family: 'Quicksand', sans-serif;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  margin-top: 0.5rem;
+}
+
+.signup-link a {
+  color: #CF7EE5;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.signup-link a:hover {
+  color: #b968d1;
+}
+
+@media (max-width: 768px) {
+  .login-wrapper {
+    padding: 1rem;
+  }
+  
+  .login-container {
+    padding: 2rem 1.5rem;
+    border-radius: 24px;
+  }
+  
+  .login-title {
+    font-size: 2.5rem;
+  }
+  
+  .login-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .input-field {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .login-btn {
+    padding: 0.875rem;
+    font-size: 0.95rem;
+  }
+  
+  .signup-link {
+    font-size: 0.85rem;
+  }
 }

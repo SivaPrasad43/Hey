@@ -1,69 +1,52 @@
-<div class="container bg-black h-dvh d-flex align-items-center justify-content-center">
-  <div class="login-container col-md-3 p-3 bg-violet-800 rounded-3 relative overflow-hidden">
-    <form (ngSubmit)="register()">
-      <h1 
-        class="p-3 font-bold w-100 bg-white absolute top-0 left-0 text-center"
-        style="font-size: 1.7rem;"
-        >Hey👋</h1>
-        <div class="d-flex mt-5">
-          <h1 class="my-4 d-flex justify-content-center" style="font-size: 5rem;">😊</h1>
-          <h1 class="my-4 d-flex justify-content-center" style="font-size: 5rem;">🥺</h1>
-          <h1 class="my-4 d-flex justify-content-center" style="font-size: 5rem;">😡</h1>
-        </div>
-        <div class="mb-3">
-          <h1 class="font-bold text-white" style="font-size: 2rem;">Register</h1>
-          <small class="text-slate-300">Enter your details</small>
-        </div>
-        <div 
-        class="d-flex align-items-center form-control"
-        >
-        <i class="fa-solid fa-user mr-2"></i>
+<div class="register-wrapper">
+  <div class="register-container">
+    <div class="register-header">
+      <h1 class="register-title">Hey</h1>
+      <p class="register-subtitle">Create your account</p>
+    </div>
+    
+    <form (ngSubmit)="register()" class="register-form">
+      <div class="input-group">
+        <label for="username">Username</label>
         <input
           type="text"
-          name="usename"
+          name="username"
           [(ngModel)]="username"
-          class="w-100"
-          placeholder="Enter Username"
-          id="email">
+          placeholder="Choose a username"
+          id="username"
+          class="input-field">
       </div>
-      <br>
-        <div 
-          class="d-flex align-items-center form-control"
-          >
-          <i class="fa-regular fa-envelope mr-2"></i>
-          <input
-            type="text"
-            name="email"
-            [(ngModel)]="email"
-            class="w-100"
-            placeholder="Enter email"
-            id="email">
-        </div>
-          <br>
-          <div class="d-flex align-items-center form-control">
-            <i class="fa-solid fa-lock mr-2"></i>
-            <input
-              type="password"
-              class="w-100"
-              [(ngModel)]="password"
-              name="password"
-              placeholder="Enter password"
-              id="password">
-          </div>
-          <br>
-          <button 
-            id="loginBtn"
-            type="button"
-            class="text-violet-800 fond-bold w-100 bg-violet-300 hover:bg-violet-500 hover:text-white focus:ring-4 focus:ring-violet-300 font-medium rounded-lg px-5 py-2.5 me-2 mb-2"
-            style="font-size: 1rem;"
-            type="submit"
-            > <strong>Register</strong> </button>
-            <p class="m-auto text-center py-2 text-slate-300">Go back to 
-              <a 
-                class="text-white"
-                routerLink="/login">
-             <strong>Login</strong>
-            </a></p>
+
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input
+          type="text"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="you@example.com"
+          id="email"
+          class="input-field">
+      </div>
+
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="••••••••"
+          id="password"
+          class="input-field">
+      </div>
+
+      <button type="submit" class="register-btn">
+        Create account
+      </button>
+
+      <p class="login-link">
+        Already have an account? 
+        <a routerLink="/login">Sign in</a>
+      </p>
     </form>
   </div>
 </div>

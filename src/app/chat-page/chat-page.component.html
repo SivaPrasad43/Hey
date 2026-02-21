@@ -1,171 +1,109 @@
-<div class=" h-dvh bg-black overflow-hidden">
-    <div class="row pt-4">
-        <div  
-            class="chat-container p-3 rounded-5 overflow-hidden position-relative p-0 h-dvh col-md-5 m-auto bg-violet-100"
-            [ngClass]="{
-                'happy-shadow': shadowMode === 'Happy',
-                'sad-shadow': shadowMode === 'Sad',
-                'angry-shadow': shadowMode === 'Angry',
-                'lovely-shadow': shadowMode === 'Lovely'
-            }"
-            >
-            <div class="chat-header d-flex align-center justify-content-between bg-violet-50 shadow-sm rounded-sm p-4 w-100 absolute top-0 left-0">
-                <div class="chat-container-title font-bold text-2xl">Hey👋</div>
-                <div class="d-flex align-items-center">
-                    <div class="dropdown">
-                        <img 
-                        class="rounded-circle mr-4 dropdown-toggle profile-img" 
-                        id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"
-                        src="https://cdn-icons-png.flaticon.com/512/149/149071.png" 
-                        alt="image">
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                          <li 
-                            (click)="logout()"
-                            class="dropdown-item"><i class="fa-solid fa-arrow-right-from-bracket text-danger mr-3"></i>Logout</li>
-                        </ul>
-                      </div>
-                </div>
-                
-            </div>
-            <div #chatBody class="chat-body p-md-3 p-1 my-5 position-relative overflow-auto" style="height: 80dvh;">
-                <ng-container *ngFor="let message of messages">
-                    <ng-container *ngIf="message.isJoined && message.text == undefined">
-                        <p class="text-center mb-2 text-sm"> <strong>{{message.userName}}</strong> Joined in this chat</p>
-                    </ng-container>
-                    <ng-container *ngIf="!message.isJoined && message.text == undefined">
-                        <p class="text-center mb-2 text-sm"> <strong>{{message.userName}}</strong> Left in this chat</p>
-                    </ng-container>
-                    
-                    <ng-container *ngIf="message.text != undefined">
-                        <div *ngIf="message.senderId != userId" class="msg-container-left d-flex justify-content-start mb-3">
-                            <div class="chat-user relative mr-2 profile-img">
-                                <img 
-                                    class="rounded-circle mr-2" 
-                                    src="https://cdn-icons-png.flaticon.com/512/149/149071.png" 
-                                    alt="image">
-                                <!-- <div 
-                                class="active-icon absolute right-0"
-                                style="font-size: 0.7rem; bottom:-5px;"
-                                ><i class="fa-solid fa-circle text-green-500 fas-sm p-0 m-0"></i></div> -->
-                            </div>                 
-                            <div 
-                            class="chat-container-message p-3 py-2 rounded-4 relative shadow-sm"
-                            [ngClass]="{
-                                'bg-purple-50': message.mode == 'Happy',
-                                'bg-red-300': message.mode == 'Angry',
-                                'bg-blue-300': message.mode == 'Sad',
-                                'bg-pink-300': message.mode == 'Lovely',
-                            }"
-                            style="max-width: 80%;"
-                            ><div 
-                            class="emoji-icon absolute" 
-                            style="top: -0.6rem;left: -0.6rem; font-size:1.3rem;"
-                        >{{message.emoji}}</div>
-                                <div class="chat-user-name font-bold">{{message.sender}}</div>
-                                <div class="chat-user-message">{{message.text}}</div>
-                                <div class="chat-time float-end text-sm" style="font-size: 0.8rem;">{{message.time}}</div>
-                            </div>
-                        </div>
-                        <div *ngIf="message.senderId == userId" class="msg-container-right d-flex justify-content-end mb-3">
-                            <div 
-                                class="
-                                    chat-container-message 
-                                    p-3
-                                    py-2
-                                    rounded-4 
-                                    relative
-                                    shadow-sm"
-                                [ngClass]="{
-                                        'bg-white': message.mode == 'Happy',
-                                        'bg-red-300': message.mode == 'Angry',
-                                        'bg-blue-300': message.mode == 'Sad',
-                                        'bg-pink-300': message.mode == 'Lovely',
-                                    }"
-                                style="max-width: 80%;"
-                                >
-                                <div 
-                                    class="emoji-icon absolute" 
-                                    style="top: -0.6rem;right: -0.6rem; font-size:1.3rem;"
-                                >{{message.emoji}}</div>
-                                <div class="chat-user-name font-bold">You</div>
-                                <div class="chat-user-message text-wrap">
-                                    <p class="text-wrap" style="word-wrap: break-word;">{{message.text}}</p>
-                                </div>
-                                <div class="chat-time float-end text-slate-800" style="font-size: 0.8rem;">{{ message.time }}</div>
-                            </div>
-                            <img 
-                                class="col-1 rounded-circle ml-2 profile-img" 
-                                src="https://cdn-icons-png.flaticon.com/512/149/149071.png" 
-                                alt="image">
-                        </div>
-                    </ng-container>
-                </ng-container>
-            </div>
-            <div class="absolute px-3" style="bottom:2rem;left:0;right:0;">
-                <div class="chat-box d-flex p-1  rounded-pill position-relative"
-                style="height: 3.5rem;"
-                [ngClass]="{
-                    'bg-violet-200': emojiMode.mode == 'Happy',
-                    'bg-red-200': emojiMode.mode == 'Angry',
-                    'bg-blue-200': emojiMode.mode == 'Sad',
-                    'bg-pink-200': emojiMode.mode == 'Lovely',
-                }"
-                >
-                    <input 
-                        style="margin-right: 3.5rem;"
-                        class="w-100 rounded-pill px-3 text-md"
-                        [(ngModel)]="message"
-                        (keydown.enter)="sendMsg()"
-                        autocomplete="off"
-                        placeholder="Write a message..."
-                        type="text">
-
-                    <div class="position-relative">
-                        <div class="emoji-container position-absolute right-0 bottom-0 d-flex flex-column justify-content-end">
-                            <ng-container *ngFor="let emoji of emojiList; let i = index">
-                                <button
-                                    [attr.id]="'emoji_'+i"
-                                    *ngIf="emoji.mode != emojiMode.mode"
-                                    (click)="setEmoji(emoji)"
-                                    class="roundButton d-flex rounded-pill text-light mb-1"
-                                    [ngClass]="{
-                                        'bg-violet-300': emoji.mode == 'Happy',
-                                        'bg-red-300': emoji.mode == 'Angry',
-                                        'bg-blue-300': emoji.mode == 'Sad',
-                                        'bg-pink-300': emoji.mode == 'Lovely',
-                                    }"
-                                    type="button"
-                                ><span class="p-2" style="font-size: 1.5rem;">{{emoji.emoji}}</span>
-                                </button>
-                            </ng-container>
-                            <button
-                                id="activeEmoji"
-                                class="roundButton activeEmoji d-flex rounded-pill text-light"
-                                [ngClass]="{
-                                    'bg-violet-300': emojiMode.mode == 'Happy',
-                                    'bg-red-300': emojiMode.mode == 'Angry',
-                                    'bg-blue-300': emojiMode.mode == 'Sad',
-                                    'bg-pink-300': emojiMode.mode == 'Lovely',
-                                }"
-                                type="button"
-                            ><span class="p-2" style="font-size: 1.5rem;">{{emojiMode.emoji}}</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button *ngIf="message != ''" class="send-btn ml-2 d-flex p-3 rounded-pill text-light" [ngClass]="{
-                                                'bg-violet-500': emojiMode.mode == 'Happy',
-                                                'bg-red-500': emojiMode.mode == 'Angry',
-                                                'bg-sky-500': emojiMode.mode == 'Sad',
-                                                'bg-pink-500': emojiMode.mode == 'Lovely',
-                                            }" (click)="sendMsg()">
-                        <i class="fa-solid fa-paper-plane py-1"></i>
-                        <span id="sendText">Send</span>
-                    </button>
-                    
-                </div>
-
-            </div>
-        </div>
+<div class="chat-wrapper">
+  <div class="chat-container" 
+       [class.ambience-happy]="ambienceMode === 'Happy'"
+       [class.ambience-sad]="ambienceMode === 'Sad'"
+       [class.ambience-angry]="ambienceMode === 'Angry'"
+       [class.ambience-lovely]="ambienceMode === 'Lovely'">
+    <div class="chat-header">
+      <h1 class="chat-title">Hey👋</h1>
+      <div class="dropdown">
+        <img 
+          class="profile-img dropdown-toggle" 
+          id="dropdownMenuButton1" 
+          data-bs-toggle="dropdown" 
+          aria-expanded="false"
+          src="https://cdn-icons-png.flaticon.com/512/149/149071.png" 
+          alt="Profile">
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+          <li (click)="logout()" class="dropdown-item">
+            <i class="fa-solid fa-arrow-right-from-bracket text-danger mr-3"></i>Logout
+          </li>
+        </ul>
+      </div>
     </div>
+
+    <div #chatBody class="chat-body" (scroll)="onScroll($event)">
+      <ng-container *ngIf="isInitialLoad">
+        <div class="skeleton-message" *ngFor="let i of [1,2,3,4,5]">
+          <div class="skeleton-bubble">
+            <div class="skeleton-line skeleton-line-short"></div>
+            <div class="skeleton-line skeleton-line-long"></div>
+            <div class="skeleton-line skeleton-line-medium"></div>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="!isInitialLoad">
+        <ng-container *ngFor="let message of messages">
+        <p *ngIf="message.isJoined && !message.text" class="system-message">
+          <strong>{{message.userName}}</strong> joined the chat
+        </p>
+        <p *ngIf="!message.isJoined && !message.text" class="system-message">
+          <strong>{{message.userName}}</strong> left the chat
+        </p>
+
+        <div *ngIf="message.text" class="message-row" [class.own]="message.senderId === userId">
+          <div class="message-bubble" 
+               [class.own]="message.senderId === userId"
+               [class.happy]="message.mode === 'Happy'"
+               [class.sad]="message.mode === 'Sad'"
+               [class.angry]="message.mode === 'Angry'"
+               [class.lovely]="message.mode === 'Lovely'">
+            <div class="message-emoji">{{message.emoji}}</div>
+            <div class="message-sender">{{message.senderId === userId ? 'You' : message.sender}}</div>
+            <div class="message-text">{{message.text}}</div>
+            <div class="message-time">{{message.time}}</div>
+          </div>
+        </div>
+      </ng-container>
+      </ng-container>
+    </div>
+
+    <button *ngIf="showScrollButton" class="scroll-to-bottom-btn" (click)="scrollToBottom()">
+      <i class="fa-solid fa-arrow-down"></i>
+    </button>
+
+    <div class="chat-input-area">
+      <div class="input-wrapper">
+        <textarea 
+          class="message-input"
+          [(ngModel)]="message"
+          (keydown.enter)="handleEnter($event)"
+          (input)="autoResize($event)"
+          autocomplete="off"
+          placeholder="Type a message..."
+          rows="1"></textarea>
+
+        <div class="emoji-selector">
+          <div class="emoji-options">
+            <button
+              *ngFor="let emoji of emojiList"
+              [hidden]="emoji.mode === emojiMode.mode"
+              (click)="setEmoji(emoji)"
+              class="emoji-option"
+              type="button">
+              {{emoji.emoji}}
+            </button>
+          </div>
+          <button 
+            class="emoji-btn"
+            [class.happy]="emojiMode.mode === 'Happy'"
+            [class.sad]="emojiMode.mode === 'Sad'"
+            [class.angry]="emojiMode.mode === 'Angry'"
+            [class.lovely]="emojiMode.mode === 'Lovely'"
+            type="button">
+            {{emojiMode.emoji}}
+          </button>
+        </div>
+
+        <button 
+          *ngIf="message" 
+          class="send-btn" 
+          (click)="sendMsg()"
+          type="button">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
