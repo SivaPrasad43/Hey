@@ -1,11 +1,11 @@
-<div class="register-wrapper">
-  <div class="register-container">
-    <div class="register-header">
-      <h1 class="register-title">Hey</h1>
-      <p class="register-subtitle">Create your account</p>
+<div class="auth-wrapper">
+  <div class="auth-container">
+    <div class="auth-header">
+      <h1 class="auth-title">Hey</h1>
+      <p class="auth-subtitle">Create your account</p>
     </div>
     
-    <form (ngSubmit)="register()" class="register-form">
+    <form (ngSubmit)="register()" class="auth-form">
       <div class="input-group">
         <label for="username">Username</label>
         <input
@@ -39,11 +39,11 @@
           class="input-field">
       </div>
 
-      <button type="submit" class="register-btn">
+      <button type="submit" class="auth-btn">
         Create account
       </button>
 
-      <p class="login-link">
+      <p class="auth-link">
         Already have an account? 
         <a routerLink="/login">Sign in</a>
       </p>
