@@ -30,7 +30,6 @@ import { RoomMoodComponent } from './room-mood.component';
 import { RoomInfoSheetComponent } from './room-info-sheet.component';
 import { MessageAction, MessageActionsSheetComponent } from './message-actions-sheet.component';
 import { replyRef } from './message-format';
-import { ThemeToggleComponent } from '../../shared/ui/theme-toggle.component';
 import { EditEvent, ReactEvent } from './message-group.component';
 import { RoomService, otherMember, roomTitle } from '../../core/room.service';
 import { ToastService } from '../../core/toast.service';
@@ -48,7 +47,7 @@ import { ShortcutsService } from './shortcuts-dialog.component';
 
 @Component({
     selector: 'app-room-page',
-    imports: [RouterLink, NgIcon, HlmButtonImports, HlmEmptyImports, HlmTooltipImports, AvatarComponent, ComposerComponent, MessageListComponent, ThemeToggleComponent, RoomMoodComponent, EmotionFaceComponent, RoomInfoSheetComponent, MessageActionsSheetComponent],
+    imports: [RouterLink, NgIcon, HlmButtonImports, HlmEmptyImports, HlmTooltipImports, AvatarComponent, ComposerComponent, MessageListComponent, RoomMoodComponent, EmotionFaceComponent, RoomInfoSheetComponent, MessageActionsSheetComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: {
     class: 'flex h-full min-h-0 flex-col',
@@ -85,7 +84,6 @@ import { ShortcutsService } from './shortcuts-dialog.component';
         } @else {
           <div class="flex-1"></div>
         }
-        <app-theme-toggle class="max-md:hidden" />
       </header>
 
       @if (filter(); as f) {

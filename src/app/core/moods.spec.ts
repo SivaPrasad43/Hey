@@ -45,7 +45,7 @@ describe('moods', () => {
     }
   });
 
-  it('own-bubble fills keep white text at WCAG AA (>= 4.5:1)', () => {
+  it('own-bubble fills keep their text at WCAG AA in both themes (>= 4.5:1)', () => {
     const toLinear = ([L, C, h]: [number, number, number]) => {
       const a = C * Math.cos((h * Math.PI) / 180);
       const b = C * Math.sin((h * Math.PI) / 180);
@@ -59,10 +59,15 @@ describe('moods', () => {
         clamp(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s),
       ];
     };
+    const lum = (c: [number, number, number]) => {
+      const [r, g, b] = toLinear(c);
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const ink = lum([0.24, 0.02, 285]); // --on-fill in light theme
     for (const mood of MOODS) {
-      const [r, g, b] = toLinear(mood.fillOklch);
-      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-      expect((1.05 / (lum + 0.05)) >= 4.5).withContext(mood.id).toBeTrue();
+      const dark = mood.darkInk ? (lum(mood.fillOklch) + 0.05) / (ink + 0.05) : 1.05 / (lum(mood.fillOklch) + 0.05);
+      expect(dark >= 4.5).withContext(mood.id + ' dark').toBeTrue();
+      expect((lum(mood.fillLightOklch) + 0.05) / (ink + 0.05) >= 4.5).withContext(mood.id + ' light').toBeTrue();
     }
   });
 });

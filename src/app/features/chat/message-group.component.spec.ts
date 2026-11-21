@@ -24,7 +24,7 @@ describe('MessageGroupComponent bubbles', () => {
     expect(el.querySelector('article')!.classList).toContain('justify-end');
     const bubble = el.querySelector('[data-mid] .rounded-2xl') as HTMLElement;
     expect(bubble.className).toContain('bg-mood-sad-fill');
-    expect(bubble.className).toContain('text-white');
+    expect(bubble.className).toContain('text-on-fill');
     expect(el.querySelector('[aria-label="Sent"]')).not.toBeNull();
   });
 

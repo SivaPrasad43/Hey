@@ -56,7 +56,7 @@ const HOLD_MS = 4200;
             <div class="flex" [class.justify-end]="line.own">
               <div
                 class="relative max-w-[78%] rounded-2xl px-3.5 py-2 text-[0.9rem] leading-snug shadow-soft"
-                [class]="(line.own ? m.fill + ' text-white rounded-br-md' : 'bg-background border ' + m.pill + ' rounded-bl-md') + ' ' + (animate ? m.motion : '')"
+                [class]="(line.own ? m.fill + ' text-on-fill rounded-br-md' : 'bg-background border ' + m.pill + ' rounded-bl-md') + ' ' + (animate ? m.motion : '')"
               >
                 <span class="flex items-start gap-2">
                   <app-emotion-face [emotion]="line.mood" [size]="18" [play]="animate ? line.mood + i : null" />

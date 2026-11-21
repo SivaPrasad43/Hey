@@ -47,7 +47,7 @@ export interface EditEvent {
       [class.justify-end]="run().own"
       [attr.aria-label]="(run().own ? 'You' : run().senderName) + ' at ' + run().time"
     >
-      <div class="flex max-w-[85%] min-w-0 flex-col gap-1 sm:max-w-[75%]" [class]="run().own ? 'items-end' : 'items-start'">
+      <div class="flex max-w-[90%] min-w-0 flex-col gap-1 sm:max-w-[75%]" [class]="run().own ? 'items-end' : 'items-start'">
         @for (item of run().items; track item.msg.id; let last = $last) {
           @let m = moodOf(item.msg);
           <div
@@ -75,7 +75,8 @@ export interface EditEvent {
             <!-- hover / tap toolbar, on the inner side of the bubble -->
             @if (!item.msg.pending && !item.msg.deleted && editingId() !== item.msg.id) {
               <div
-                class="bg-popover border-border pointer-events-none flex shrink-0 [@media(hover:none)]:hidden items-center gap-0.5 rounded-full border p-1 opacity-0 shadow-float transition-opacity group-hover/line:pointer-events-auto group-hover/line:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100 has-[[aria-expanded=true]]:pointer-events-auto has-[[aria-expanded=true]]:opacity-100 data-[open=true]:pointer-events-auto data-[open=true]:opacity-100"
+                class="bg-popover border-border pointer-events-none absolute top-1/2 z-10 flex -translate-y-1/2 [@media(hover:none)]:hidden items-center gap-0.5 rounded-full border p-1 opacity-0 shadow-float transition-opacity group-hover/line:pointer-events-auto group-hover/line:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100 has-[[aria-expanded=true]]:pointer-events-auto has-[[aria-expanded=true]]:opacity-100 data-[open=true]:pointer-events-auto data-[open=true]:opacity-100"
+                [class]="run().own ? 'right-full mr-1.5' : 'left-full ml-1.5'"
                 [attr.data-open]="activeId() === item.msg.id"
               >
                 <button hlmBtn variant="ghost" size="icon-xs" aria-label="Reply" hlmTooltip="Reply" (click)="reply.emit(item.msg)">
@@ -201,7 +202,7 @@ export interface EditEvent {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   class="font-medium break-all underline underline-offset-2"
-                                  [class]="run().own ? 'decoration-white/60' : 'text-primary decoration-primary/40'"
+                                  [class]="run().own ? 'decoration-on-fill/50' : 'text-primary decoration-primary/40'"
                                   >{{ t.value }}</a
                                 >
                               }
@@ -216,7 +217,7 @@ export interface EditEvent {
                   }
                   <!-- meta row inside the bubble -->
                   @if (item.msg.editedAt || run().own) {
-                    <div class="mt-0.5 flex items-center justify-end gap-1 text-[0.7rem]" [class]="run().own && kind === 'text' ? 'text-white/80' : 'text-muted-foreground'">
+                    <div class="mt-0.5 flex items-center justify-end gap-1 text-[0.7rem]" [class]="run().own && kind === 'text' ? 'text-on-fill/70' : 'text-muted-foreground'">
                       @if (item.msg.editedAt) {
                         <span>edited</span>
                       }
@@ -240,7 +241,7 @@ export interface EditEvent {
                                 <ng-icon name="lucideCheckCheck" size="13" aria-label="Seen" />
                               }
                             } @else {
-                              <ng-icon name="lucideCheckCheck" size="13" aria-label="Seen" [class]="kind === 'text' ? 'text-white' : 'text-primary'" />
+                              <ng-icon name="lucideCheckCheck" size="13" aria-label="Seen" [class]="kind === 'text' ? 'text-on-fill' : 'text-primary'" />
                             }
                           }
                         }
@@ -364,7 +365,7 @@ export class MessageGroupComponent {
   showSender = computed(() => this.isGroup() && !this.run().own);
   lastTime = computed(() => this.run().items[this.run().items.length - 1]?.time ?? this.run().time);
 
-  /** Bubble surface: yours filled with the feeling, others white with a feeling outline. */
+  /** Bubble surface: yours filled with the feeling, others on the card with a feeling outline. */
   bubbleClass(msg: DisplayMessage, last: boolean): string {
     const own = this.run().own;
     const tail = last ? (own ? 'rounded-br-md' : 'rounded-bl-md') : '';
@@ -374,7 +375,7 @@ export class MessageGroupComponent {
     const motion = this.fresh().has(msg.id) ? m.motion : '';
     if (this.kindOf(msg) !== 'text' && !msg.replyTo) return `!bg-transparent !shadow-none !px-1 !py-0 ${motion}`;
     const surface = own
-      ? `${m.fill} text-white ${msg.pending ? 'opacity-70' : ''}`
+      ? `${m.fill} text-on-fill ${msg.pending ? 'opacity-70' : ''}`
       : `bg-card text-card-foreground border ${m.pill}`;
     return `${surface} ${tail} ${motion} ${active}`;
   }
@@ -399,7 +400,7 @@ export class MessageGroupComponent {
 
   quoteClass(mood: MoodId): string {
     const m = this.moodOf(mood);
-    return this.run().own ? 'bg-black/15 border-l-white/70 text-white' : `bg-muted text-foreground ${m.edge.split(' ').find((c) => c.startsWith('border-l-')) ?? ''}`;
+    return this.run().own ? 'bg-on-fill/8 border-l-on-fill/45 text-on-fill' : `bg-muted text-foreground ${m.edge.split(' ').find((c) => c.startsWith('border-l-')) ?? ''}`;
   }
 
   receipt(msg: DisplayMessage): Receipt {

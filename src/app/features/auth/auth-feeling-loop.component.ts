@@ -17,7 +17,7 @@ const STEP_MS = 2200;
   template: `
     <div class="auth-showcase-panel flex h-[168px] cursor-pointer flex-col items-center justify-center gap-4 rounded-3xl border select-none" (click)="next()">
       @for (m of [mood()]; track m.id) {
-        <div class="flex items-center gap-2 rounded-2xl rounded-br-md px-4 py-2.5 text-[0.95rem] text-white shadow-float" [class]="m.fill + ' ' + (animate ? m.motion : '')">
+        <div class="flex items-center gap-2 rounded-2xl rounded-br-md px-4 py-2.5 text-[0.95rem] text-on-fill shadow-float" [class]="m.fill + ' ' + (animate ? m.motion : '')">
           <app-emotion-face [emotion]="m.id" [size]="22" [play]="animate ? m.id : null" />
           <span class="font-medium">{{ line }}</span>
         </div>

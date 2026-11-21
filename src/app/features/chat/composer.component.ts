@@ -112,13 +112,19 @@ const SUGGEST_DELAY_MS = 400;
             hlmBtn
             type="button"
             variant="ghost"
-            size="icon-sm"
-            class="rounded-xl"
+            size="icon"
+            class="group/sticker rounded-xl"
             [attr.aria-label]="'Send a ' + current().label.toLowerCase() + ' sticker'"
             [hlmTooltip]="'Send ' + current().label.toLowerCase() + ' sticker'"
             (click)="sendSticker()"
           >
-            <ng-icon name="lucideSticker" />
+            <!-- the sticker itself: the current feeling's face -->
+            <app-emotion-face
+              class="transition-transform duration-200 group-hover/sticker:scale-115 group-active/sticker:scale-95"
+              [emotion]="current().id"
+              [size]="24"
+              [play]="current().id"
+            />
           </button>
           <div class="relative" #sendWrap>
             <button

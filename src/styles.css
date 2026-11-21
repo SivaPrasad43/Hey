@@ -18,6 +18,7 @@
   --color-mood-angry-fill: var(--mood-angry-fill);
   --color-mood-sad-fill: var(--mood-sad-fill);
   --color-mood-lovely-fill: var(--mood-lovely-fill);
+  --color-on-fill: var(--on-fill);
   /* Dribbble-style soft, diffuse elevation */
   --shadow-soft: 0 1px 3px var(--shadow-color-soft), 0 1px 2px -1px var(--shadow-color-soft);
   --shadow-float: 0 12px 32px -8px var(--shadow-color-float), 0 2px 6px -1px var(--shadow-color-soft);
@@ -28,16 +29,19 @@
 color-scheme: light;
 
 /* Feelings: one family, matched lightness, slightly softened chroma. */
---mood-happy: oklch(0.75 0.16 68);
+--mood-happy: oklch(0.82 0.17 90);
 --mood-angry: oklch(0.63 0.2 25);
 --mood-sad: oklch(0.63 0.17 255);
 --mood-lovely: oklch(0.65 0.2 352);
-/* Bubble fills for your own messages: dark enough for white text (WCAG AA, see moods.spec). */
---mood-happy-fill: oklch(0.55 0.13 60);
---mood-angry-fill: oklch(0.53 0.19 27);
---mood-sad-fill: oklch(0.52 0.16 258);
---mood-lovely-fill: oklch(0.53 0.19 355);
---mood-happy-ring: oklch(0.75 0.16 68 / 0.22);
+/* Bubble fills for your own messages. Light: soft pastels with ink text; dark: deep fills
+   with white text. Both pass WCAG AA (see moods.spec: fillLightOklch / fillOklch). */
+--mood-happy-fill: oklch(0.94 0.1 98);
+--mood-angry-fill: oklch(0.9 0.06 25);
+--mood-sad-fill: oklch(0.9 0.055 255);
+--mood-lovely-fill: oklch(0.9 0.065 350);
+--on-fill: oklch(0.24 0.02 285);
+--on-fill-ink: oklch(0.24 0.02 285);
+--mood-happy-ring: oklch(0.82 0.17 90 / 0.25);
 --mood-angry-ring: oklch(0.63 0.2 25 / 0.2);
 --mood-sad-ring: oklch(0.63 0.17 255 / 0.2);
 --mood-lovely-ring: oklch(0.65 0.2 352 / 0.2);
@@ -82,11 +86,16 @@ color-scheme: light;
 :root.dark {
 color-scheme: dark;
 /* Ink: deep blue-black surfaces (hue ~280) */
---mood-happy: oklch(0.8 0.15 75);
+--mood-happy: oklch(0.87 0.16 95);
 --mood-angry: oklch(0.7 0.17 22);
 --mood-sad: oklch(0.72 0.14 252);
 --mood-lovely: oklch(0.72 0.17 350);
---mood-happy-ring: oklch(0.8 0.15 75 / 0.25);
+--mood-happy-fill: oklch(0.86 0.16 95);
+--mood-angry-fill: oklch(0.53 0.19 27);
+--mood-sad-fill: oklch(0.52 0.16 258);
+--mood-lovely-fill: oklch(0.53 0.19 355);
+--on-fill: oklch(1 0 0);
+--mood-happy-ring: oklch(0.87 0.16 95 / 0.25);
 --mood-angry-ring: oklch(0.7 0.17 22 / 0.25);
 --mood-sad-ring: oklch(0.72 0.14 252 / 0.25);
 --mood-lovely-ring: oklch(0.72 0.17 350 / 0.25);
