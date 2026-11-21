@@ -17,7 +17,7 @@ import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmEmptyImports } from '@spartan-ng/helm/empty';
 import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmSpinnerImports } from '@spartan-ng/helm/spinner';
-import { EditEvent, MessageGroupComponent, ReactEvent } from './message-group.component';
+import { EditEvent, MessageGroupComponent, MessageMenuRequest, ReactEvent } from './message-group.component';
 import { AppUser, Room } from '../../core/models';
 import { MoodId } from '../../core/moods';
 import { EmotionTimelineComponent } from './emotion-timeline.component';
@@ -111,6 +111,7 @@ const LOAD_MORE_PX = 150;
                   (remove)="remove.emit($event)"
                   (reply)="reply.emit($event)"
                   (longPress)="longPress.emit($event)"
+                  [activeId]="activeId()"
                   [editRequest]="editRequest()"
                   (jump)="jumpTo($event)"
                 />
@@ -171,7 +172,9 @@ export class MessageListComponent implements AfterViewChecked {
   edit = output<EditEvent>();
   remove = output<DisplayMessage>();
   reply = output<DisplayMessage>();
-  longPress = output<DisplayMessage>();
+  longPress = output<MessageMenuRequest>();
+  /** Message whose actions menu is open. */
+  activeId = input<string | null>(null);
   editRequest = input<{ id: string; n: number } | null>(null);
   /** People typing right now, with their current feeling. */
   typers = input<{ uid: string; name: string; mood: MoodId }[]>([]);

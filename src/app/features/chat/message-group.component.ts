@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { NgIcon } from '@ng-icons/core';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
-import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
 import { HlmTextareaImports } from '@spartan-ng/helm/textarea';
 import { HlmTooltipImports } from '@spartan-ng/helm/tooltip';
 import { AppUser, Room } from '../../core/models';
@@ -21,6 +20,11 @@ export interface ReactEvent {
   msg: DisplayMessage;
   mood: MoodId;
 }
+export interface MessageMenuRequest {
+  msg: DisplayMessage;
+  /** Where to anchor a desktop menu; absent for the phone sheet. */
+  at?: { x: number; y: number };
+}
 export interface EditEvent {
   msg: DisplayMessage;
   text: string;
@@ -32,7 +36,6 @@ export interface EditEvent {
   imports: [
     NgIcon,
     HlmButtonImports,
-    HlmDropdownMenuImports,
     HlmTextareaImports,
     HlmTooltipImports,
     AvatarComponent,
@@ -40,7 +43,7 @@ export interface EditEvent {
     ReactionBurstComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block', '(document:pointerdown)': 'onOutside($event)' },
+  host: { class: 'block' },
   template: `
     <article
       class="flex pt-4"
@@ -51,10 +54,13 @@ export interface EditEvent {
         @for (item of run().items; track item.msg.id; let last = $last) {
           @let m = moodOf(item.msg);
           <div
-            class="group/line relative flex max-w-full touch-pan-y items-center gap-1.5 select-none md:select-auto"
+            class="group/line relative flex max-w-full touch-pan-y items-center gap-1.5 rounded-2xl outline-none select-none focus-visible:ring-2 focus-visible:ring-ring md:select-auto"
             [class.flex-row-reverse]="!run().own"
             [attr.data-mid]="item.msg.id"
-            (click)="onLineTap($event, item.msg.id)"
+            [attr.tabindex]="item.msg.pending ? null : 0"
+            [attr.aria-haspopup]="item.msg.pending ? null : 'menu'"
+            (click)="onLineTap()"
+            (keydown)="onLineKey($event, item.msg)"
             (pointerdown)="onPointerDown($event, item.msg)"
             (pointermove)="onPointerMove($event)"
             (pointerup)="onPointerUp()"
@@ -72,39 +78,6 @@ export interface EditEvent {
                 <ng-icon name="lucideReply" size="16" />
               </span>
             }
-            <!-- hover / tap toolbar, on the inner side of the bubble -->
-            @if (!item.msg.pending && !item.msg.deleted && editingId() !== item.msg.id) {
-              <div
-                class="bg-popover border-border pointer-events-none absolute top-1/2 z-10 flex -translate-y-1/2 [@media(hover:none)]:hidden items-center gap-0.5 rounded-full border p-1 opacity-0 shadow-float transition-opacity group-hover/line:pointer-events-auto group-hover/line:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100 has-[[aria-expanded=true]]:pointer-events-auto has-[[aria-expanded=true]]:opacity-100 data-[open=true]:pointer-events-auto data-[open=true]:opacity-100"
-                [class]="run().own ? 'right-full mr-1.5' : 'left-full ml-1.5'"
-                [attr.data-open]="activeId() === item.msg.id"
-              >
-                <button hlmBtn variant="ghost" size="icon-xs" aria-label="Reply" hlmTooltip="Reply" (click)="reply.emit(item.msg)">
-                  <ng-icon name="lucideReply" />
-                </button>
-                <button
-                  hlmBtn
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label="React with a feeling"
-                  hlmTooltip="React"
-                  [hlmDropdownMenuTrigger]="reactMenu"
-                  [hlmDropdownMenuTriggerData]="{ $implicit: item.msg }"
-                  [align]="run().own ? 'end' : 'start'"
-                >
-                  <ng-icon name="lucideSmilePlus" />
-                </button>
-                @if (item.msg.senderId === meUid()) {
-                  <button hlmBtn variant="ghost" size="icon-xs" aria-label="Edit message" hlmTooltip="Edit" (click)="startEdit(item.msg)">
-                    <ng-icon name="lucidePencil" />
-                  </button>
-                  <button hlmBtn variant="ghost" size="icon-xs" aria-label="Delete message" hlmTooltip="Delete" (click)="remove.emit(item.msg)">
-                    <ng-icon name="lucideTrash2" />
-                  </button>
-                }
-              </div>
-            }
-
             <div
               class="flex min-w-0 flex-col"
               [class]="run().own ? 'items-end' : 'items-start'"
@@ -291,24 +264,6 @@ export interface EditEvent {
       </div>
     </article>
 
-    <ng-template #reactMenu let-msg>
-      <hlm-dropdown-menu class="w-auto p-1.5">
-        <div class="flex gap-1" role="group" aria-label="React with a feeling">
-          @for (mo of moods; track mo.id) {
-            <button
-              hlmDropdownMenuItem
-              class="flex-col gap-1 px-2.5 py-2"
-              [class.bg-accent]="myReaction(msg) === mo.id"
-              [attr.aria-pressed]="myReaction(msg) === mo.id"
-              (triggered)="onChip(msg, mo.id)"
-            >
-              <app-emotion-face [emotion]="mo.id" [size]="24" [interactive]="true" />
-              <span class="text-xs">{{ mo.label }}</span>
-            </button>
-          }
-        </div>
-      </hlm-dropdown-menu>
-    </ng-template>
   `,
 })
 export class MessageGroupComponent {
@@ -322,6 +277,8 @@ export class MessageGroupComponent {
   bumps = input<ReadonlySet<string>>(new Set());
   /** Room + user directory, for read receipts on your own messages. */
   room = input<Room | null>(null);
+  /** Message whose actions menu is open: highlighted. */
+  activeId = input<string | null>(null);
   users = input<ReadonlyMap<string, AppUser>>(new Map());
 
   react = output<ReactEvent>();
@@ -329,7 +286,8 @@ export class MessageGroupComponent {
   remove = output<DisplayMessage>();
   reply = output<DisplayMessage>();
   /** Long-press on touch devices: open the action sheet. */
-  longPress = output<DisplayMessage>();
+  /** Open the message's actions: a sheet on phones (long-press), a menu at `at` on desktop (right-click). */
+  longPress = output<MessageMenuRequest>();
   /** Ask this group to start editing a message (from the action sheet). */
   editRequest = input<{ id: string; n: number } | null>(null);
   /** Scroll to a quoted message. */
@@ -340,8 +298,6 @@ export class MessageGroupComponent {
 
   editingId = signal<string | null>(null);
   draft = signal('');
-  /** Line whose toolbar is pinned open by a tap (touch devices have no hover). */
-  activeId = signal<string | null>(null);
   /** Replay tokens for faces, keyed by message id. */
   playToken = signal<Record<string, number>>({});
   /** Burst tokens for my own reactions, keyed by `${msgId}:${mood}`. */
@@ -440,13 +396,23 @@ export class MessageGroupComponent {
     this.react.emit({ msg, mood });
   }
 
-  onLineTap(e: MouseEvent, id: string): void {
-    if (isTouchUi() || this.suppressTap) {
-      this.suppressTap = false;
-      return; // phones use long-press and swipe instead of a tap toolbar
+  /** Swallow the click that ends a long-press or swipe. */
+  onLineTap(): void {
+    this.suppressTap = false;
+  }
+
+  /** Keyboard: Enter, the Menu key or Shift+F10 opens the actions menu. */
+  onLineKey(e: KeyboardEvent, msg: DisplayMessage): void {
+    if (e.target !== e.currentTarget || msg.pending) return;
+    if (e.key === 'Enter' || e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) {
+      e.preventDefault();
+      this.openMenu(msg, e.currentTarget as HTMLElement);
     }
-    if ((e.target as Element).closest('button, textarea, a')) return;
-    this.activeId.update((cur) => (cur === id ? null : id));
+  }
+
+  private openMenu(msg: DisplayMessage, el: HTMLElement, x?: number, y?: number): void {
+    const r = el.getBoundingClientRect();
+    this.longPress.emit({ msg, at: { x: x ?? (this.run().own ? r.right : r.left), y: y ?? r.bottom + 4 } });
   }
 
   // ----- touch gestures: long-press opens actions, swipe right replies -----
@@ -468,7 +434,7 @@ export class MessageGroupComponent {
       g.mode = 'none';
       this.suppressTap = true;
       vibrate('happy');
-      this.longPress.emit(msg);
+      this.longPress.emit({ msg });
     }, LONG_PRESS_MS);
     this.gesture = g;
   }
@@ -509,20 +475,25 @@ export class MessageGroupComponent {
     this.swipe.set({ id: null, offset: 0, armed: false, dragging: false });
   }
 
-  /** Touch long-press fires `contextmenu` on some browsers: use it, and hide the native menu. */
+  /** Right-click (desktop) opens the menu at the cursor; touch long-press fires it too, so hide the native one. */
   onContextMenu(e: MouseEvent, msg: DisplayMessage): void {
-    if (!isTouchUi()) return;
+    if ((e.target as Element).closest('a, textarea')) return; // keep the browser menu for links and editing
     e.preventDefault();
-    if (this.gesture?.mode === 'press') {
-      clearTimeout(this.gesture.timer);
-      this.gesture.mode = 'none';
-      this.suppressTap = true;
-      this.longPress.emit(msg);
+    if (msg.pending || this.editingId() === msg.id) return;
+    if (isTouchUi() || this.gesture?.mode === 'press') {
+      if (this.gesture?.mode === 'press') {
+        clearTimeout(this.gesture.timer);
+        this.gesture.mode = 'none';
+        this.suppressTap = true;
+        this.longPress.emit({ msg });
+      }
+      return;
     }
+    const keyboard = e.clientX === 0 && e.clientY === 0;
+    this.openMenu(msg, e.currentTarget as HTMLElement, keyboard ? undefined : e.clientX, keyboard ? undefined : e.clientY);
   }
 
   startEdit(m: DisplayMessage): void {
-    this.activeId.set(null);
     this.draft.set(m.text);
     this.editingId.set(m.id);
     setTimeout(() => {
@@ -547,9 +518,5 @@ export class MessageGroupComponent {
 
   cancelEdit(): void {
     this.editingId.set(null);
-  }
-
-  onOutside(e: PointerEvent): void {
-    if (this.activeId() && !this.host.nativeElement.contains(e.target as Node)) this.activeId.set(null);
   }
 }

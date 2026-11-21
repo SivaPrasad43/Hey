@@ -78,7 +78,7 @@ import { PageHeaderComponent } from '../page-header.component';
           <h2 class="text-base font-bold tracking-tight">Messages</h2>
           <div>
             <h3 class="font-semibold">Reactions</h3>
-            <p class="text-muted-foreground mt-1">Hover a message (tap on touch screens) and react with a feeling. You get one reaction per message; choose it again to remove it.</p>
+            <p class="text-muted-foreground mt-1">Right-click a message (or hold it on a phone, or focus it and press Enter) to react, reply, copy, edit or delete. You get one reaction per message; choose it again to remove it.</p>
           </div>
           <div>
             <h3 class="font-semibold">Read receipts</h3>

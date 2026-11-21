@@ -29,6 +29,7 @@ import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import { RoomMoodComponent } from './room-mood.component';
 import { RoomInfoSheetComponent } from './room-info-sheet.component';
 import { MessageAction, MessageActionsSheetComponent } from './message-actions-sheet.component';
+import type { MessageMenuRequest } from './message-group.component';
 import { replyRef } from './message-format';
 import { EditEvent, ReactEvent } from './message-group.component';
 import { RoomService, otherMember, roomTitle } from '../../core/room.service';
@@ -124,7 +125,8 @@ import { recentMembers } from './recent-members';
         (edit)="onEdit($event)"
         (remove)="onRemove($event)"
         (reply)="startReply($event)"
-        (longPress)="actionsFor.set($event)"
+        (longPress)="openActions($event)"
+        [activeId]="actionsFor()?.id ?? null"
         [editRequest]="editRequest()"
         [typers]="activeTypers()"
       />
@@ -132,8 +134,9 @@ import { recentMembers } from './recent-members';
       <div class="px-3 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
         <app-message-actions-sheet
           [msg]="actionsFor()"
+          [at]="actionsAt()"
           [meUid]="auth.uid()"
-          (closed)="actionsFor.set(null)"
+          (closed)="closeActions()"
           (react)="sheetReact($event)"
           (act)="sheetAct($event)"
         />
@@ -427,19 +430,34 @@ export class RoomPage {
     setTimeout(() => list.scrollToBottom(), 300);
   }
 
-  // ---- touch action sheet ----
+  // ---- message actions: sheet on phones (long-press), menu at the cursor on desktop (right-click) ----
   actionsFor = signal<DisplayMessage | null>(null);
+  actionsAt = signal<{ x: number; y: number } | null>(null);
+  private actionsReturn: HTMLElement | null = null;
+
+  openActions(req: MessageMenuRequest): void {
+    this.actionsReturn = document.activeElement as HTMLElement | null;
+    this.actionsAt.set(req.at ?? null);
+    this.actionsFor.set(req.msg);
+  }
+
+  closeActions(): void {
+    this.actionsFor.set(null);
+    const back = this.actionsReturn;
+    this.actionsReturn = null;
+    if (back?.isConnected && back !== document.body) back.focus();
+  }
   editRequest = signal<{ id: string; n: number } | null>(null);
 
   sheetReact(mood: MoodId): void {
     const msg = this.actionsFor();
-    this.actionsFor.set(null);
+    this.closeActions();
     if (msg) this.onReact({ msg, mood });
   }
 
   async sheetAct(action: MessageAction): Promise<void> {
     const msg = this.actionsFor();
-    this.actionsFor.set(null);
+    this.closeActions();
     if (!msg) return;
     switch (action) {
       case 'reply':
