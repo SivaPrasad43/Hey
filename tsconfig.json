@@ -103,6 +103,9 @@
       ],
       "@spartan-ng/helm/switch": [
         "./libs/ui/switch/src/index.ts"
+      ],
+      "@spartan-ng/helm/sheet": [
+        "./libs/ui/sheet/src/index.ts"
       ]
     }
   },

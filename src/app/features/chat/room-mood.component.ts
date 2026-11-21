@@ -17,11 +17,11 @@ const WINDOW = 30;
         <button
           hlmPopoverTrigger
           type="button"
-          class="bg-muted hover:bg-accent aria-expanded:bg-accent flex h-9 items-center gap-2 rounded-full pr-3 pl-2 transition-colors"
+          class="bg-muted hover:bg-accent aria-expanded:bg-accent flex h-9 shrink-0 items-center gap-2 rounded-full px-2 transition-colors sm:pr-3"
           [attr.aria-label]="'Room feeling: mostly ' + dominantLabel() + '. Show breakdown'"
         >
           <app-emotion-face [emotion]="dominant()" [size]="18" [play]="dominant()" />
-          <span class="bg-muted flex h-1.5 w-16 overflow-hidden rounded-full" aria-hidden="true">
+          <span class="bg-muted hidden h-1.5 w-16 overflow-hidden rounded-full sm:flex" aria-hidden="true">
             @for (s of mix(); track s.mood.id) {
               @if (s.count) {
                 <span class="h-full transition-[width] duration-500" [class]="s.mood.dot" [style.width.%]="s.percent"></span>

@@ -18,6 +18,7 @@ import { HlmEmptyImports } from '@spartan-ng/helm/empty';
 import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmSpinnerImports } from '@spartan-ng/helm/spinner';
 import { EditEvent, MessageGroupComponent, ReactEvent } from './message-group.component';
+import { AppUser, Room } from '../../core/models';
 import { MoodId } from '../../core/moods';
 import { EmotionTimelineComponent } from './emotion-timeline.component';
 import {
@@ -101,6 +102,8 @@ const LOAD_MORE_PX = 150;
                   [color]="colors()[row.senderId]"
                   [fresh]="fresh()"
                   [bumps]="bumps()"
+                  [room]="room()"
+                  [users]="users()"
                   (react)="react.emit($event)"
                   (edit)="edit.emit($event)"
                   (remove)="remove.emit($event)"
@@ -150,6 +153,9 @@ export class MessageListComponent implements AfterViewChecked {
 
   /** Show only messages of this emotion. */
   filter = input<MoodId | null>(null);
+  /** For read receipts. */
+  room = input<Room | null>(null);
+  users = input<ReadonlyMap<string, AppUser>>(new Map());
 
   readonly skeleton = [60, 40, 75, 50];
   rows = computed(() => buildRows(this.messages(), this.meUid(), new Date(), this.filter()));

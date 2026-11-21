@@ -15,6 +15,10 @@ export interface Mood {
   edge: string;
   /** Uniform border for pills (feeling chips, reactions). */
   pill: string;
+  /** Solid bubble fill for your own messages (white text on top). */
+  fill: string;
+  /** oklch [L, C, h] of the fill, mirrored from styles.css so tests can check contrast. */
+  fillOklch: [number, number, number];
   /** Text treatment for a message line. */
   text: string;
   /** One-shot entrance animation class (see styles.css). */
@@ -35,6 +39,8 @@ export const MOODS: readonly Mood[] = [
     tint: 'bg-mood-happy/10 dark:bg-mood-happy/14',
     edge: 'border-mood-happy/30 border-l-mood-happy',
     pill: 'border-mood-happy/60',
+    fill: 'bg-mood-happy-fill',
+    fillOklch: [0.55, 0.13, 60],
     text: '',
     motion: 'emo-in-happy',
     haptic: [15, 40, 15],
@@ -49,6 +55,8 @@ export const MOODS: readonly Mood[] = [
     tint: 'bg-mood-angry/10 dark:bg-mood-angry/14',
     edge: 'border-mood-angry/30 border-l-mood-angry',
     pill: 'border-mood-angry/60',
+    fill: 'bg-mood-angry-fill',
+    fillOklch: [0.53, 0.19, 27],
     text: 'font-medium',
     motion: 'emo-in-angry',
     haptic: [35, 30, 35, 30, 35],
@@ -63,6 +71,8 @@ export const MOODS: readonly Mood[] = [
     tint: 'bg-mood-sad/10 dark:bg-mood-sad/14',
     edge: 'border-mood-sad/30 border-l-mood-sad',
     pill: 'border-mood-sad/60',
+    fill: 'bg-mood-sad-fill',
+    fillOklch: [0.52, 0.16, 258],
     text: 'text-foreground/80',
     motion: 'emo-in-sad',
     haptic: [60],
@@ -77,6 +87,8 @@ export const MOODS: readonly Mood[] = [
     tint: 'bg-mood-lovely/10 dark:bg-mood-lovely/14',
     edge: 'border-mood-lovely/30 border-l-mood-lovely',
     pill: 'border-mood-lovely/60',
+    fill: 'bg-mood-lovely-fill',
+    fillOklch: [0.53, 0.19, 355],
     text: '',
     motion: 'emo-in-lovely',
     haptic: [20, 90, 20],

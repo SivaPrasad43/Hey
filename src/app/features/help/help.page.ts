@@ -81,6 +81,10 @@ import { PageHeaderComponent } from '../page-header.component';
             <p class="text-muted-foreground mt-1">Hover a message (tap on touch screens) and react with a feeling. You get one reaction per message; choose it again to remove it.</p>
           </div>
           <div>
+            <h3 class="font-semibold">Read receipts</h3>
+            <p class="text-muted-foreground mt-1">Your messages show one tick when sent and two when read. In groups you see how many people have read your latest message. Others can see when you've read theirs.</p>
+          </div>
+          <div>
             <h3 class="font-semibold">Editing and deleting</h3>
             <p class="text-muted-foreground mt-1">You can edit or delete your own messages. Edited messages are marked, and deleted ones leave a short note in the conversation.</p>
           </div>

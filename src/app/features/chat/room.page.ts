@@ -27,6 +27,7 @@ import { ConfirmService } from '../../shared/ui/confirm.service';
 import { vibrate } from '../../core/haptics';
 import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import { RoomMoodComponent } from './room-mood.component';
+import { RoomInfoSheetComponent } from './room-info-sheet.component';
 import { ThemeToggleComponent } from '../../shared/ui/theme-toggle.component';
 import { EditEvent, ReactEvent } from './message-group.component';
 import { RoomService, otherMember, roomTitle } from '../../core/room.service';
@@ -45,7 +46,7 @@ import { ShortcutsService } from './shortcuts-dialog.component';
 
 @Component({
     selector: 'app-room-page',
-    imports: [RouterLink, NgIcon, HlmButtonImports, HlmEmptyImports, HlmTooltipImports, AvatarComponent, ComposerComponent, MessageListComponent, ThemeToggleComponent, RoomMoodComponent, EmotionFaceComponent],
+    imports: [RouterLink, NgIcon, HlmButtonImports, HlmEmptyImports, HlmTooltipImports, AvatarComponent, ComposerComponent, MessageListComponent, ThemeToggleComponent, RoomMoodComponent, EmotionFaceComponent, RoomInfoSheetComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: {
     class: 'flex h-full min-h-0 flex-col',
@@ -78,14 +79,7 @@ import { ShortcutsService } from './shortcuts-dialog.component';
             <p class="text-muted-foreground truncate text-xs" aria-live="polite">{{ typingLabel() || subtitle() }}</p>
           </div>
           <app-room-mood [messages]="messages()" [filter]="filter()" (filterChange)="filter.set($event)" />
-          @if (r.type === 'group') {
-            <button hlmBtn variant="ghost" size="icon-sm" (click)="newChat.open('add', r)" aria-label="Add people" hlmTooltip="Add people">
-              <ng-icon name="lucideUserPlus" />
-            </button>
-          }
-          <button hlmBtn variant="ghost" size="icon-sm" class="hidden md:inline-flex" (click)="shortcuts.show()" aria-label="Keyboard shortcuts" hlmTooltip="Shortcuts">
-            <ng-icon name="lucideKeyboard" />
-          </button>
+          <app-room-info-sheet [room]="r" [users]="usersById()" [messages]="messages()" [filter]="filter()" (filterChange)="filter.set($event)" />
         } @else {
           <div class="flex-1"></div>
         }
@@ -102,6 +96,8 @@ import { ShortcutsService } from './shortcuts-dialog.component';
 
       <app-message-list
         [filter]="filter()"
+        [room]="room() ?? null"
+        [users]="usersById()"
         [messages]="messages()"
         [meUid]="auth.uid()"
         [colors]="colors()"
@@ -145,7 +141,7 @@ export class RoomPage {
   notFound = computed(() => this.roomState() === null);
 
   private users = toSignal(this.usersSvc.all$, { initialValue: [] });
-  private usersById = computed(() => new Map(this.users().map((u) => [u.uid, u])));
+  usersById = computed(() => new Map(this.users().map((u) => [u.uid, u])));
   colors = computed(() => Object.fromEntries(this.users().map((u) => [u.uid, u.avatarColor])));
 
   title = computed(() => {
