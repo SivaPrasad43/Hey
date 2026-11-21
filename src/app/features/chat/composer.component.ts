@@ -11,9 +11,9 @@ import {
 } from '@angular/core';
 import { NgIcon } from '@ng-icons/core';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
-import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
 import { HlmTooltipImports } from '@spartan-ng/helm/tooltip';
 import { suggestEmotion } from '../../core/emotion-suggest';
+import { ReplyRef } from '../../core/models';
 import { MOODS, MoodId, getMood, moodForShortcut } from '../../core/moods';
 import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import { ChatStateService } from './chat-state.service';
@@ -25,7 +25,7 @@ const SUGGEST_DELAY_MS = 400;
 
 @Component({
   selector: 'app-composer',
-  imports: [NgIcon, HlmButtonImports, HlmInputGroupImports, HlmTooltipImports, EmotionFaceComponent],
+  imports: [NgIcon, HlmButtonImports, HlmTooltipImports, EmotionFaceComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'block',
@@ -33,32 +33,36 @@ const SUGGEST_DELAY_MS = 400;
     '(document:pointerdown)': 'onOutside($event)',
   },
   template: `
-    <form class="mx-auto w-full max-w-3xl" (submit)="$event.preventDefault(); submit()">
-      <div class="mb-3 flex flex-wrap items-center gap-2">
-        <div class="flex items-center gap-1" role="radiogroup" aria-label="How do you feel?" (keydown)="onBarKey($event)">
-          @for (m of moods; track m.id; let i = $index) {
+    <form
+      class="composer group/composer mx-auto w-full max-w-3xl"
+      [style.--composer-accent]="accent()"
+      [style.--composer-ring]="accentRing()"
+      (submit)="$event.preventDefault(); submit()"
+    >
+      <!-- feeling tabs sit on the box's top edge; the selected one merges into it -->
+      <div class="relative z-10 flex items-end gap-1 pl-3 sm:pl-4">
+        <div class="flex items-end gap-1" role="radiogroup" aria-label="How do you feel?" (keydown)="onBarKey($event)">
+          @for (m of moods; track m.id) {
             <button
-              #chip
               type="button"
               role="radio"
+              class="composer-tab"
               [attr.aria-checked]="state.mood() === m.id"
               [tabindex]="state.mood() === m.id ? 0 : -1"
-              class="inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-[background-color,border-color,color] outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              [class]="state.mood() === m.id ? m.tint + ' ' + m.pill + ' font-semibold shadow-soft' : 'text-muted-foreground hover:text-foreground bg-background border-border shadow-soft hover:bg-muted'"
-              [hlmTooltip]="'Alt ' + m.shortcut"
+              [hlmTooltip]="m.label + ' · Alt ' + m.shortcut"
               (click)="pick(m.id)"
             >
-              <app-emotion-face [emotion]="m.id" [size]="18" [play]="state.mood() === m.id ? playToken() : null" [interactive]="true" />
+              <app-emotion-face [emotion]="m.id" [size]="20" [play]="state.mood() === m.id ? playToken() : null" [interactive]="true" />
               <span class="max-sm:sr-only">{{ m.label }}</span>
             </button>
           }
         </div>
 
         @if (suggestion(); as s) {
-          <div class="bg-muted text-muted-foreground ml-auto inline-flex h-9 items-center gap-1.5 rounded-full pr-1 pl-3 text-xs font-medium" role="status">
-            <app-emotion-face [emotion]="s" [size]="14" [play]="s" />
-            Sounds {{ adjective(s) }}
-            <button hlmBtn type="button" size="xs" variant="secondary" class="rounded-full" (click)="pick(s)">Use {{ label(s) }}</button>
+          <div class="bg-muted text-muted-foreground mb-1.5 ml-auto inline-flex h-8 items-center gap-1.5 rounded-full pr-1 pl-2.5 text-xs font-medium" role="status">
+            <app-emotion-face [emotion]="s" [size]="16" [play]="s" />
+            <span class="max-sm:hidden">Sounds {{ adjective(s) }}</span>
+            <button hlmBtn type="button" size="xs" variant="secondary" class="bg-background rounded-full" (click)="pick(s)">Use {{ label(s) }}</button>
             <button hlmBtn type="button" size="icon-xs" variant="ghost" class="rounded-full" aria-label="Dismiss suggestion" (click)="dismissSuggestion()">
               <ng-icon name="lucideX" />
             </button>
@@ -66,80 +70,106 @@ const SUGGEST_DELAY_MS = 400;
         }
       </div>
 
-      <div>
-        <hlm-input-group class="composer-box h-auto rounded-2xl" [style.--composer-accent]="accent()" [style.--composer-ring]="accentRing()">
-          <label class="sr-only" for="composer-input">Message, feeling {{ current().label.toLowerCase() }}</label>
-          <textarea
-            hlmInputGroupTextarea
-            #input
-            id="composer-input"
-            rows="1"
-            class="max-h-40 min-h-11 resize-none"
-            [maxLength]="maxLength"
-            [value]="text()"
-            (input)="onInput($event)"
-            (keydown.enter)="onEnter($any($event))"
-            (blur)="stoppedTyping.emit()"
-            [placeholder]="placeholder()"
-            autocomplete="off"
-          ></textarea>
-          <hlm-input-group-addon align="block-end">
-            <span class="text-muted-foreground hidden text-xs md:inline">
-              Enter to send · Alt+H/A/S/L to change feeling · Hold send for a one-off
+      <!-- the box -->
+      <div class="composer-box" (click)="focusFromBox($event)">
+        @if (replyTo(); as r) {
+          <div class="bg-muted/70 mx-3 mt-3 flex items-center gap-2.5 rounded-xl py-2 pr-1.5 pl-3 text-sm" role="status">
+            <span class="h-8 w-[3px] shrink-0 rounded-full" [class]="moodDot(r.mood)"></span>
+            <app-emotion-face [emotion]="r.mood" [size]="18" />
+            <span class="min-w-0 flex-1 leading-tight">
+              <span class="flex items-center gap-1 text-xs font-semibold"><ng-icon name="lucideReply" size="12" /> Replying to {{ r.senderName }}</span>
+              <span class="text-muted-foreground block truncate text-xs">{{ r.text }}</span>
             </span>
-            <div class="relative ml-auto" #sendWrap>
-              <button
-                hlmInputGroupButton
-                variant="default"
-                size="icon-sm"
-                type="button"
-                class="size-9 disabled:opacity-35"
-                [disabled]="!canSend()"
-                aria-label="Send message"
-                aria-haspopup="menu"
-                [attr.aria-expanded]="holdOpen()"
-                hlmTooltip="Hold to send with another feeling"
-                (pointerdown)="startHold($event)"
-                (pointerup)="cancelHold()"
-                (pointerleave)="cancelHold()"
-                (contextmenu)="$event.preventDefault(); openHold()"
-                (keydown.arrowUp)="$event.preventDefault(); openHold()"
-                (click)="onSendClick()"
-              >
-                <ng-icon name="lucideSendHorizontal" />
-              </button>
+            <button hlmBtn type="button" variant="ghost" size="icon-xs" aria-label="Cancel reply" (click)="cancelReply.emit(); focus()">
+              <ng-icon name="lucideX" />
+            </button>
+          </div>
+        }
 
-              @if (holdOpen()) {
-                <div
-                  role="menu"
-                  aria-label="Send once with a feeling"
-                  class="bg-popover text-popover-foreground ring-foreground/10 animate-in fade-in-0 zoom-in-95 absolute right-0 bottom-full z-30 mb-2 flex gap-1 rounded-2xl p-2 shadow-float ring-1"
-                  (keydown)="onHoldKey($event)"
-                >
-                  @for (m of moods; track m.id; let i = $index) {
-                    <button
-                      #holdItem
-                      type="button"
-                      role="menuitem"
-                      class="hover:bg-accent focus-visible:bg-accent flex flex-col items-center gap-1 rounded-xl px-3 py-2 text-xs font-medium outline-none"
-                      [style.transform]="'translateY(' + arc[i] + 'px)'"
-                      (click)="sendWith(m.id)"
-                    >
-                      <app-emotion-face [emotion]="m.id" [size]="26" [interactive]="true" [play]="m.id" />
-                      {{ m.label }}
-                    </button>
-                  }
-                </div>
-              }
-            </div>
-          </hlm-input-group-addon>
-        </hlm-input-group>
+        <label class="sr-only" for="composer-input">Message, feeling {{ current().label.toLowerCase() }}</label>
+        <textarea
+          #input
+          id="composer-input"
+          rows="2"
+          class="placeholder:text-muted-foreground block max-h-48 min-h-16 w-full resize-none bg-transparent px-4 pt-3.5 pb-1 text-[0.95rem] leading-6 outline-none"
+          [maxLength]="maxLength"
+          [value]="text()"
+          (input)="onInput($event)"
+          (keydown.enter)="onEnter($any($event))"
+          (keydown.escape)="onEscape($any($event))"
+          (blur)="stoppedTyping.emit()"
+          [placeholder]="placeholder()"
+          autocomplete="off"
+        ></textarea>
+
+        <div class="flex items-center gap-1.5 px-2.5 pt-1 pb-2.5">
+          <span class="text-muted-foreground hidden pl-1.5 text-xs lg:inline">Enter to send · Shift+Enter for a new line · Hold send for a one-off feeling</span>
+          <span class="text-muted-foreground/70 ml-auto pr-1 text-xs tabular-nums" [class.invisible]="text().length < maxLength - 200">{{ maxLength - text().length }}</span>
+          <button
+            hlmBtn
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            class="rounded-xl"
+            [attr.aria-label]="'Send a ' + current().label.toLowerCase() + ' sticker'"
+            [hlmTooltip]="'Send ' + current().label.toLowerCase() + ' sticker'"
+            (click)="sendSticker()"
+          >
+            <ng-icon name="lucideSticker" />
+          </button>
+          <div class="relative" #sendWrap>
+            <button
+              hlmBtn
+              type="button"
+              size="icon"
+              class="rounded-xl transition-[background-color,opacity,transform] disabled:opacity-30"
+              [disabled]="!canSend()"
+              aria-label="Send message"
+              aria-haspopup="menu"
+              [attr.aria-expanded]="holdOpen()"
+              hlmTooltip="Send · hold for another feeling"
+              (pointerdown)="startHold($event)"
+              (pointerup)="cancelHold()"
+              (pointerleave)="cancelHold()"
+              (contextmenu)="$event.preventDefault(); openHold()"
+              (keydown.arrowUp)="$event.preventDefault(); openHold()"
+              (click)="onSendClick()"
+            >
+              <ng-icon name="lucideSendHorizontal" />
+            </button>
+
+            @if (holdOpen()) {
+              <div
+                role="menu"
+                aria-label="Send once with a feeling"
+                class="bg-popover text-popover-foreground ring-foreground/10 animate-in fade-in-0 zoom-in-95 absolute right-0 bottom-full z-30 mb-2 flex gap-1 rounded-2xl p-2 shadow-float ring-1"
+                (keydown)="onHoldKey($event)"
+              >
+                @for (m of moods; track m.id; let i = $index) {
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="hover:bg-accent focus-visible:bg-accent flex flex-col items-center gap-1 rounded-xl px-3 py-2 text-xs font-medium outline-none"
+                    [style.transform]="'translateY(' + arc[i] + 'px)'"
+                    (click)="sendWith(m.id)"
+                  >
+                    <app-emotion-face [emotion]="m.id" [size]="26" [interactive]="true" [play]="m.id" />
+                    {{ m.label }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
       </div>
     </form>
   `,
 })
 export class ComposerComponent {
   roomName = input('');
+  /** Message being replied to, if any. */
+  replyTo = input<ReplyRef | null>(null);
+  cancelReply = output<void>();
   send = output<{ text: string; mood: MoodId }>();
   typing = output<void>();
   stoppedTyping = output<void>();
@@ -175,6 +205,17 @@ export class ComposerComponent {
   private sendWrap = viewChild<ElementRef<HTMLElement>>('sendWrap');
   private host = inject(ElementRef<HTMLElement>);
 
+  moodDot(id: MoodId): string {
+    return getMood(id).dot;
+  }
+
+  /** A sticker is just the feeling's emoji; it renders as the feeling's artwork. */
+  sendSticker(): void {
+    const m = this.current();
+    this.send.emit({ text: m.emoji, mood: m.id });
+    this.focus();
+  }
+
   label(id: MoodId): string {
     return getMood(id).label;
   }
@@ -198,6 +239,11 @@ export class ComposerComponent {
     this.focus();
   }
 
+  /** Clicking empty space in the box focuses the textarea (buttons keep their own behaviour). */
+  focusFromBox(e: MouseEvent): void {
+    if (!(e.target as Element).closest('button, textarea, a')) this.focus();
+  }
+
   focus(): void {
     this.textarea().nativeElement.focus();
   }
@@ -219,6 +265,13 @@ export class ComposerComponent {
     const s = suggestEmotion(this.text());
     const show = s && !this.pickedThisDraft && s !== this.state.mood() && !this.dismissed.has(s);
     this.suggestion.set(show ? s : null);
+  }
+
+  onEscape(e: KeyboardEvent): void {
+    if (this.replyTo()) {
+      e.preventDefault();
+      this.cancelReply.emit();
+    }
   }
 
   onEnter(e: KeyboardEvent): void {

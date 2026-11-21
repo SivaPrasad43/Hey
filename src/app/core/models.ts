@@ -37,6 +37,15 @@ export interface Room {
 
 export type MessageType = 'text' | 'system';
 
+/** Snapshot of the message being replied to. */
+export interface ReplyRef {
+  id: string;
+  senderId: string;
+  senderName: string;
+  text: string;
+  mood: MoodId;
+}
+
 export interface Message {
   id: string;
   type: MessageType;
@@ -50,6 +59,7 @@ export interface Message {
   editedAt?: Timestamp | null;
   deleted?: boolean;
   clientId?: string;
+  replyTo?: ReplyRef | null;
 }
 
 export const GENERAL_ROOM_ID = 'general';

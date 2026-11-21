@@ -17,7 +17,7 @@ import {
   writeBatch,
 } from '@angular/fire/firestore';
 import { Observable, of } from 'rxjs';
-import { Message, Room } from './models';
+import { Message, ReplyRef, Room } from './models';
 import { MoodId } from './moods';
 
 export const PAGE_SIZE = 30;
@@ -66,7 +66,14 @@ export class MessageService {
     return { oldest, full: docs.length === PAGE_SIZE, messages$ };
   }
 
-  async send(roomId: string, sender: { uid: string; name: string }, text: string, mood: MoodId, clientId: string) {
+  async send(
+    roomId: string,
+    sender: { uid: string; name: string },
+    text: string,
+    mood: MoodId,
+    clientId: string,
+    replyTo: ReplyRef | null = null,
+  ) {
     const batch = writeBatch(this.db);
     const ref = doc(this.col(roomId));
     batch.set(ref, {
@@ -76,6 +83,7 @@ export class MessageService {
       senderName: sender.name,
       mood,
       clientId,
+      ...(replyTo ? { replyTo } : {}),
       createdAt: serverTimestamp(),
     });
     batch.update(doc(this.db, 'rooms', roomId), {

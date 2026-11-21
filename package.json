@@ -10,7 +10,8 @@
     "start:emu": "ng serve --configuration emulators",
     "emulators": "firebase emulators:start --only auth,firestore --project hey-chat-7ea1b",
     "test:rules": "firebase emulators:exec --only auth,firestore --project hey-chat-7ea1b \"node scripts/rules-smoke.mjs\"",
-    "deploy:rules": "firebase deploy --only firestore:rules"
+    "deploy:rules": "firebase deploy --only firestore:rules",
+    "emotion-art": "node scripts/build-emotion-art.mjs"
   },
   "private": true,
   "engines": {
@@ -44,6 +45,7 @@
     "@angular-devkit/build-angular": "^21.2.30",
     "@angular/cli": "^21.2.30",
     "@angular/compiler-cli": "^21.2.26",
+    "@iconify-json/fluent-emoji-flat": "^1.2.6",
     "@spartan-ng/cli": "^1.10.0",
     "@tailwindcss/postcss": "^4.3.5",
     "@types/jasmine": "~4.3.0",

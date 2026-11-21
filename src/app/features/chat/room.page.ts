@@ -16,7 +16,7 @@ import { RouterLink } from '@angular/router';
 import { Observable, Subscription, catchError, of, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { MessageService, nextReaction } from '../../core/message.service';
-import { Message } from '../../core/models';
+import { Message, ReplyRef } from '../../core/models';
 import { MoodId, getMood } from '../../core/moods';
 import { Timestamp } from '@angular/fire/firestore';
 import { NgIcon } from '@ng-icons/core';
@@ -28,6 +28,7 @@ import { vibrate } from '../../core/haptics';
 import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import { RoomMoodComponent } from './room-mood.component';
 import { RoomInfoSheetComponent } from './room-info-sheet.component';
+import { replyRef } from './message-format';
 import { ThemeToggleComponent } from '../../shared/ui/theme-toggle.component';
 import { EditEvent, ReactEvent } from './message-group.component';
 import { RoomService, otherMember, roomTitle } from '../../core/room.service';
@@ -108,10 +109,19 @@ import { ShortcutsService } from './shortcuts-dialog.component';
         (react)="onReact($event)"
         (edit)="onEdit($event)"
         (remove)="onRemove($event)"
+        (reply)="startReply($event)"
+        [typers]="activeTypers()"
       />
 
       <div class="px-3 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
-        <app-composer [roomName]="title()" (send)="send($event)" (typing)="onTyping()" (stoppedTyping)="onStopTyping()" />
+        <app-composer
+          [roomName]="title()"
+          [replyTo]="replyTo()"
+          (cancelReply)="replyTo.set(null)"
+          (send)="send($event)"
+          (typing)="onTyping()"
+          (stoppedTyping)="onStopTyping()"
+        />
       </div>
     }
   `
@@ -214,12 +224,16 @@ export class RoomPage {
     this.roomId$.pipe(switchMap((id) => this.typingSvc.typers$(id).pipe(catchError(() => of([]))))),
     { initialValue: [] },
   );
-  typingLabel = computed(() => {
+  /** People typing right now (not me), with their current feeling. */
+  activeTypers = computed(() => {
     const now = this.tick();
     const me = this.auth.uid();
-    const names = this.typers()
+    return this.typers()
       .filter((t) => t.uid !== me && t.at && now - t.at.toMillis() < TYPING_TTL_MS)
-      .map((t) => t.name);
+      .map((t) => ({ uid: t.uid, name: t.name, mood: getMood(t.mood).id }));
+  });
+  typingLabel = computed(() => {
+    const names = this.activeTypers().map((t) => t.name);
     if (!names.length) return '';
     if (names.length === 1) return `${names[0]} is typing…`;
     if (names.length === 2) return `${names[0]} and ${names[1]} are typing…`;
@@ -300,6 +314,7 @@ export class RoomPage {
 
   private async openRoom(id: string): Promise<void> {
     this.filter.set(null);
+    this.replyTo.set(null);
     this.clearPages();
     this.loading.set(true);
     this.pending.set([]);
@@ -365,18 +380,28 @@ export class RoomPage {
     }
   }
 
+  // ---- replies ----
+  replyTo = signal<ReplyRef | null>(null);
+
+  startReply(msg: Message): void {
+    this.replyTo.set(replyRef(msg));
+    setTimeout(() => this.composer()?.focus());
+  }
+
   async send({ text, mood }: { text: string; mood: MoodId }): Promise<void> {
     const uid = this.auth.uid();
     if (!uid) return;
     const clientId = crypto.randomUUID();
+    const replyTo = this.replyTo();
+    this.replyTo.set(null);
     vibrate(mood);
     const sender = { uid, name: this.auth.displayName() };
     this.pending.update((p) => [
       ...p,
-      { id: clientId, type: 'text', text, mood, senderId: uid, senderName: sender.name, createdAt: null, pending: true },
+      { id: clientId, type: 'text', text, mood, senderId: uid, senderName: sender.name, createdAt: null, pending: true, replyTo },
     ]);
     try {
-      await this.messagesSvc.send(this.roomId(), sender, text, mood, clientId);
+      await this.messagesSvc.send(this.roomId(), sender, text, mood, clientId, replyTo);
     } catch {
       this.pending.update((p) => p.filter((m) => m.id !== clientId));
       this.toast.error('Message not sent. Check your connection.');
@@ -387,7 +412,7 @@ export class RoomPage {
 
   onTyping(): void {
     const uid = this.auth.uid();
-    if (uid) this.typingSvc.ping(this.roomId(), uid, this.auth.displayName());
+    if (uid) this.typingSvc.ping(this.roomId(), uid, this.auth.displayName(), this.state.mood());
   }
 
   onStopTyping(): void {

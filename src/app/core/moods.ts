@@ -27,6 +27,8 @@ export interface Mood {
   haptic: number[];
   /** Short phrase used by the suggester ("Sounds sad"). */
   adjective: string;
+  /** Emoji character a sticker message is sent as (renders as the feeling's artwork). */
+  emoji: string;
 }
 
 export const MOODS: readonly Mood[] = [
@@ -45,6 +47,7 @@ export const MOODS: readonly Mood[] = [
     motion: 'emo-in-happy',
     haptic: [15, 40, 15],
     adjective: 'happy',
+    emoji: '😁',
   },
   {
     id: 'angry',
@@ -61,6 +64,7 @@ export const MOODS: readonly Mood[] = [
     motion: 'emo-in-angry',
     haptic: [35, 30, 35, 30, 35],
     adjective: 'angry',
+    emoji: '😡',
   },
   {
     id: 'sad',
@@ -77,6 +81,7 @@ export const MOODS: readonly Mood[] = [
     motion: 'emo-in-sad',
     haptic: [60],
     adjective: 'sad',
+    emoji: '🥺',
   },
   {
     id: 'lovely',
@@ -93,6 +98,7 @@ export const MOODS: readonly Mood[] = [
     motion: 'emo-in-lovely',
     haptic: [20, 90, 20],
     adjective: 'loving',
+    emoji: '😍',
   },
 ];
 

@@ -58,3 +58,7 @@ npm run build && firebase deploy --only hosting
 | `rooms/{roomId}/typing/{uid}` | `name`, `at`. Entries older than 6 s are ignored |
 
 Presence uses a 60-second heartbeat on `users/{uid}`, so a user shows as online when their last heartbeat is less than 2.5 minutes old. Messages in the old top-level `messages` collection (from before the rooms refactor) are not shown.
+
+## Credits
+
+Emotion artwork: [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) by Microsoft, MIT License. Regenerate with `npm run emotion-art`.

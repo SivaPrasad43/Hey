@@ -12,7 +12,7 @@ describe('EmotionFaceComponent', () => {
       const host = f.nativeElement as HTMLElement;
       expect(host.getAttribute('aria-hidden')).toBe('true');
       expect(host.classList).toContain('face-' + m.id);
-      expect(host.className).toContain(m.color);
+      expect(host.querySelector('svg')!.getAttribute('viewBox')).toBe('0 0 32 32');
       shapes.add(host.querySelector('svg')!.innerHTML);
     }
     expect(shapes.size).toBe(MOODS.length);

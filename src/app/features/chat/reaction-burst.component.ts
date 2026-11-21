@@ -1,4 +1,7 @@
-import { ChangeDetectionStrategy, Component, effect, input, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
+import { EMOTION_PARTICLES } from '../../core/emotion-art';
+import { getMood } from '../../core/moods';
 import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 
 interface Particle {
@@ -31,7 +34,7 @@ let seq = 0;
         @if (p.face) {
           <app-emotion-face [emotion]="mood()" [size]="p.size" />
         } @else {
-          <span class="block size-1.5 rounded-full" [class]="dotClass()"></span>
+          <svg [attr.width]="p.size" [attr.height]="p.size" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" [innerHTML]="particle()"></svg>
         }
       </span>
     }
@@ -46,6 +49,9 @@ export class ReactionBurstComponent {
   subtle = input(false);
 
   particles = signal<Particle[]>([]);
+  private sanitizer = inject(DomSanitizer);
+  /** Static bundled artwork, safe to trust. */
+  particle = computed(() => this.sanitizer.bypassSecurityTrustHtml(EMOTION_PARTICLES[getMood(this.mood()).id]));
 
   constructor() {
     effect(() => {
@@ -60,12 +66,12 @@ export class ReactionBurstComponent {
       const spread = (i / (n - 1) - 0.5) * 2; // -1..1
       return {
         id: ++seq,
-        face: i % 3 === 0,
+        face: i % 4 === 0,
         dx: `${Math.round((spread * 26 + (Math.random() - 0.5) * 10) * reach)}px`,
         dy: `${Math.round(-(22 + Math.random() * 24) * reach)}px`,
         rot: `${Math.round((Math.random() - 0.5) * 60)}deg`,
         delay: `${Math.round(Math.random() * 90)}ms`,
-        size: 12,
+        size: i % 4 === 0 ? 14 : 10 + Math.round(Math.random() * 4),
       };
     });
     this.particles.update((p) => [...p, ...batch]);

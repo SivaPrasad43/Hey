@@ -21,6 +21,8 @@ import { EditEvent, MessageGroupComponent, ReactEvent } from './message-group.co
 import { AppUser, Room } from '../../core/models';
 import { MoodId } from '../../core/moods';
 import { EmotionTimelineComponent } from './emotion-timeline.component';
+import { AvatarComponent } from '../../shared/ui/avatar.component';
+import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import {
   DisplayMessage,
   ReactionCounts,
@@ -36,7 +38,7 @@ const LOAD_MORE_PX = 150;
 
 @Component({
     selector: 'app-message-list',
-    imports: [MessageGroupComponent, EmotionTimelineComponent, NgIcon, HlmButtonImports, HlmEmptyImports, HlmSkeletonImports, HlmSpinnerImports],
+    imports: [MessageGroupComponent, EmotionTimelineComponent, AvatarComponent, EmotionFaceComponent, NgIcon, HlmButtonImports, HlmEmptyImports, HlmSkeletonImports, HlmSpinnerImports],
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'relative flex min-h-0 flex-1 flex-col' },
     template: `
@@ -107,9 +109,25 @@ const LOAD_MORE_PX = 150;
                   (react)="react.emit($event)"
                   (edit)="edit.emit($event)"
                   (remove)="remove.emit($event)"
+                  (reply)="reply.emit($event)"
+                  (jump)="jumpTo($event)"
                 />
               }
             }
+          }
+
+          @for (t of typers(); track t.uid) {
+            <div class="mt-4 flex items-end gap-2 animate-in fade-in-0 slide-in-from-bottom-2" role="status" [attr.aria-label]="t.name + ' is typing'">
+              <app-avatar size="sm" [name]="t.name" [uid]="t.uid" [color]="colors()[t.uid]" />
+              <div class="bg-card border-border shadow-soft flex items-center gap-2 rounded-2xl rounded-bl-md border px-3 py-2.5">
+                <app-emotion-face [emotion]="t.mood" [size]="16" [play]="t.mood" />
+                <span class="flex gap-1" aria-hidden="true">
+                  <span class="bg-muted-foreground/60 size-1.5 animate-typing-dot rounded-full"></span>
+                  <span class="bg-muted-foreground/60 size-1.5 animate-typing-dot rounded-full [animation-delay:150ms]"></span>
+                  <span class="bg-muted-foreground/60 size-1.5 animate-typing-dot rounded-full [animation-delay:300ms]"></span>
+                </span>
+              </div>
+            </div>
           }
         }
       </div>
@@ -150,6 +168,9 @@ export class MessageListComponent implements AfterViewChecked {
   react = output<ReactEvent>();
   edit = output<EditEvent>();
   remove = output<DisplayMessage>();
+  reply = output<DisplayMessage>();
+  /** People typing right now, with their current feeling. */
+  typers = input<{ uid: string; name: string; mood: MoodId }[]>([]);
 
   /** Show only messages of this emotion. */
   filter = input<MoodId | null>(null);
@@ -185,6 +206,14 @@ export class MessageListComponent implements AfterViewChecked {
   private prevLastId: string | null = null;
 
   constructor() {
+    effect(() => {
+      if (this.typers().length && untracked(() => this.atBottom())) {
+        untracked(() => {
+          this.pendingScroll = { kind: 'bottom', smooth: true };
+          setTimeout(() => this.applyPendingScroll());
+        });
+      }
+    });
     effect(() => {
       const msgs = this.messages();
       const loading = this.loading();

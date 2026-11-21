@@ -11,6 +11,7 @@ import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import { DisplayMessage, Row, reactionChips } from './message-rows';
 import { ReactionBurstComponent } from './reaction-burst.component';
 import { Receipt, receiptFor } from './receipts';
+import { Token, formatText, isEmojiOnly, stickerMood } from './message-format';
 
 type Run = Extract<Row, { kind: 'run' }>;
 
@@ -59,6 +60,9 @@ export interface EditEvent {
                 class="bg-popover border-border pointer-events-none flex shrink-0 items-center gap-0.5 rounded-full border p-1 opacity-0 shadow-float transition-opacity group-hover/line:pointer-events-auto group-hover/line:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100 has-[[aria-expanded=true]]:pointer-events-auto has-[[aria-expanded=true]]:opacity-100 data-[open=true]:pointer-events-auto data-[open=true]:opacity-100"
                 [attr.data-open]="activeId() === item.msg.id"
               >
+                <button hlmBtn variant="ghost" size="icon-xs" aria-label="Reply" hlmTooltip="Reply" (click)="reply.emit(item.msg)">
+                  <ng-icon name="lucideReply" />
+                </button>
                 <button
                   hlmBtn
                   variant="ghost"
@@ -109,27 +113,87 @@ export interface EditEvent {
                 } @else if (item.msg.deleted) {
                   <p class="text-sm italic">This message was deleted.</p>
                 } @else {
-                  <div class="flex items-start gap-2">
+                  @let kind = kindOf(item.msg);
+                  @if (item.msg.replyTo; as q) {
                     <button
                       type="button"
-                      class="mt-0.5 shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      [attr.aria-label]="'Feeling ' + m.label.toLowerCase() + '. Replay'"
-                      [hlmTooltip]="m.label"
-                      (click)="replay(item.msg.id)"
-                      (mouseenter)="replay(item.msg.id)"
+                      class="mb-1.5 flex w-full max-w-72 min-w-40 items-start gap-2 rounded-xl border-l-[3px] px-2.5 py-1.5 text-left text-xs transition-opacity hover:opacity-80"
+                      [class]="quoteClass(q.mood)"
+                      [attr.aria-label]="'Replying to ' + q.senderName + ': ' + q.text + '. Jump to message'"
+                      (click)="jump.emit(q.id)"
                     >
-                      <app-emotion-face
-                        [emotion]="m.id"
-                        [size]="16"
-                        [colored]="!run().own"
-                        [play]="playToken()[item.msg.id] || (fresh().has(item.msg.id) ? item.msg.id : null)"
-                      />
+                      <app-emotion-face [emotion]="q.mood" [size]="14" class="mt-px" />
+                      <span class="min-w-0 flex-1">
+                        <span class="block truncate font-semibold">{{ q.senderId === meUid() ? 'You' : q.senderName }}</span>
+                        <span class="block truncate opacity-80">{{ q.text }}</span>
+                      </span>
                     </button>
-                    <p class="min-w-0 text-[0.925rem] leading-relaxed break-words whitespace-pre-wrap" [class]="run().own ? '' : m.text">{{ item.msg.text }}</p>
-                  </div>
+                  }
+                  @switch (kind) {
+                    @case ('sticker') {
+                      <button
+                        type="button"
+                        class="block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        [attr.aria-label]="m.label + ' sticker. Replay'"
+                        (click)="replay(item.msg.id)"
+                        (mouseenter)="replay(item.msg.id)"
+                      >
+                        <app-emotion-face [emotion]="m.id" [size]="76" [play]="playToken()[item.msg.id] || (fresh().has(item.msg.id) ? item.msg.id : null)" />
+                      </button>
+                    }
+                    @case ('emoji') {
+                      <p class="text-5xl leading-tight tracking-wide" [attr.aria-label]="m.label + ': ' + item.msg.text">{{ item.msg.text }}</p>
+                    }
+                    @default {
+                      <div class="flex items-start gap-2">
+                        <button
+                          type="button"
+                          class="mt-0.5 shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          [attr.aria-label]="'Feeling ' + m.label.toLowerCase() + '. Replay'"
+                          [hlmTooltip]="m.label"
+                          (click)="replay(item.msg.id)"
+                          (mouseenter)="replay(item.msg.id)"
+                        >
+                          <app-emotion-face
+                            [emotion]="m.id"
+                            [size]="18"
+                            [play]="playToken()[item.msg.id] || (fresh().has(item.msg.id) ? item.msg.id : null)"
+                          />
+                        </button>
+                        <p class="min-w-0 text-[0.925rem] leading-relaxed break-words whitespace-pre-wrap" [class]="run().own ? '' : m.text"
+                          >@for (t of tokens(item.msg.text); track $index) {
+                            @switch (t.kind) {
+                              @case ('bold') {
+                                <strong class="font-semibold">{{ t.value }}</strong>
+                              }
+                              @case ('italic') {
+                                <em>{{ t.value }}</em>
+                              }
+                              @case ('code') {
+                                <code class="rounded-md px-1 py-0.5 font-mono text-[0.85em]" [class]="run().own ? 'bg-black/20' : 'bg-muted'">{{ t.value }}</code>
+                              }
+                              @case ('link') {
+                                <a
+                                  [href]="t.href"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  class="font-medium break-all underline underline-offset-2"
+                                  [class]="run().own ? 'decoration-white/60' : 'text-primary decoration-primary/40'"
+                                  >{{ t.value }}</a
+                                >
+                              }
+                              @default {
+                                <span>{{ t.value }}</span>
+                              }
+                            }
+                          }
+                        </p>
+                      </div>
+                    }
+                  }
                   <!-- meta row inside the bubble -->
                   @if (item.msg.editedAt || run().own) {
-                    <div class="mt-0.5 flex items-center justify-end gap-1 text-[0.7rem]" [class]="run().own ? 'text-white/80' : 'text-muted-foreground'">
+                    <div class="mt-0.5 flex items-center justify-end gap-1 text-[0.7rem]" [class]="run().own && kind === 'text' ? 'text-white/80' : 'text-muted-foreground'">
                       @if (item.msg.editedAt) {
                         <span>edited</span>
                       }
@@ -153,7 +217,7 @@ export interface EditEvent {
                                 <ng-icon name="lucideCheckCheck" size="13" aria-label="Seen" />
                               }
                             } @else {
-                              <ng-icon name="lucideCheckCheck" size="13" aria-label="Seen" class="text-white" />
+                              <ng-icon name="lucideCheckCheck" size="13" aria-label="Seen" [class]="kind === 'text' ? 'text-white' : 'text-primary'" />
                             }
                           }
                         }
@@ -237,6 +301,9 @@ export class MessageGroupComponent {
   react = output<ReactEvent>();
   edit = output<EditEvent>();
   remove = output<DisplayMessage>();
+  reply = output<DisplayMessage>();
+  /** Scroll to a quoted message. */
+  jump = output<string>();
 
   readonly moods = MOODS;
   private host = inject(ElementRef<HTMLElement>);
@@ -265,10 +332,34 @@ export class MessageGroupComponent {
     if (msg.deleted) return `${tail} ${active} border border-border bg-muted text-muted-foreground`;
     const m = this.moodOf(msg);
     const motion = this.fresh().has(msg.id) ? m.motion : '';
+    if (this.kindOf(msg) !== 'text' && !msg.replyTo) return `!bg-transparent !shadow-none !px-1 !py-0 ${motion}`;
     const surface = own
       ? `${m.fill} text-white ${msg.pending ? 'opacity-70' : ''}`
       : `bg-card text-card-foreground border ${m.pill}`;
     return `${surface} ${tail} ${motion} ${active}`;
+  }
+
+  /** How a message's body is drawn: a feeling sticker, big emoji, or formatted text. */
+  kindOf(msg: DisplayMessage): 'sticker' | 'emoji' | 'text' {
+    if (stickerMood(msg.text)) return 'sticker';
+    if (isEmojiOnly(msg.text)) return 'emoji';
+    return 'text';
+  }
+
+  private tokenCache = new Map<string, Token[]>();
+  tokens(text: string): Token[] {
+    let t = this.tokenCache.get(text);
+    if (!t) {
+      t = formatText(text);
+      if (this.tokenCache.size > 500) this.tokenCache.clear();
+      this.tokenCache.set(text, t);
+    }
+    return t;
+  }
+
+  quoteClass(mood: MoodId): string {
+    const m = this.moodOf(mood);
+    return this.run().own ? 'bg-black/15 border-l-white/70 text-white' : `bg-muted text-foreground ${m.edge.split(' ').find((c) => c.startsWith('border-l-')) ?? ''}`;
   }
 
   receipt(msg: DisplayMessage): Receipt {
