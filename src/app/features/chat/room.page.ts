@@ -28,6 +28,7 @@ import { vibrate } from '../../core/haptics';
 import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import { RoomMoodComponent } from './room-mood.component';
 import { RoomInfoSheetComponent } from './room-info-sheet.component';
+import { MessageAction, MessageActionsSheetComponent } from './message-actions-sheet.component';
 import { replyRef } from './message-format';
 import { ThemeToggleComponent } from '../../shared/ui/theme-toggle.component';
 import { EditEvent, ReactEvent } from './message-group.component';
@@ -47,7 +48,7 @@ import { ShortcutsService } from './shortcuts-dialog.component';
 
 @Component({
     selector: 'app-room-page',
-    imports: [RouterLink, NgIcon, HlmButtonImports, HlmEmptyImports, HlmTooltipImports, AvatarComponent, ComposerComponent, MessageListComponent, ThemeToggleComponent, RoomMoodComponent, EmotionFaceComponent, RoomInfoSheetComponent],
+    imports: [RouterLink, NgIcon, HlmButtonImports, HlmEmptyImports, HlmTooltipImports, AvatarComponent, ComposerComponent, MessageListComponent, ThemeToggleComponent, RoomMoodComponent, EmotionFaceComponent, RoomInfoSheetComponent, MessageActionsSheetComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: {
     class: 'flex h-full min-h-0 flex-col',
@@ -65,7 +66,7 @@ import { ShortcutsService } from './shortcuts-dialog.component';
         </hlm-empty-content>
       </hlm-empty>
     } @else {
-      <header class="flex h-16 shrink-0 items-center gap-2 border-b px-3 sm:px-6">
+      <header class="flex h-16 shrink-0 items-center gap-2 border-b px-3 pt-[env(safe-area-inset-top)] max-md:h-14 max-md:gap-1.5 max-md:px-2 sm:px-6">
         <a hlmBtn variant="ghost" size="icon-sm" routerLink="/chat" class="md:hidden" aria-label="Back to chats">
           <ng-icon name="lucideChevronLeft" />
         </a>
@@ -84,7 +85,7 @@ import { ShortcutsService } from './shortcuts-dialog.component';
         } @else {
           <div class="flex-1"></div>
         }
-        <app-theme-toggle />
+        <app-theme-toggle class="max-md:hidden" />
       </header>
 
       @if (filter(); as f) {
@@ -110,10 +111,19 @@ import { ShortcutsService } from './shortcuts-dialog.component';
         (edit)="onEdit($event)"
         (remove)="onRemove($event)"
         (reply)="startReply($event)"
+        (longPress)="actionsFor.set($event)"
+        [editRequest]="editRequest()"
         [typers]="activeTypers()"
       />
 
       <div class="px-3 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
+        <app-message-actions-sheet
+          [msg]="actionsFor()"
+          [meUid]="auth.uid()"
+          (closed)="actionsFor.set(null)"
+          (react)="sheetReact($event)"
+          (act)="sheetAct($event)"
+        />
         <app-composer
           [roomName]="title()"
           [replyTo]="replyTo()"
@@ -121,6 +131,7 @@ import { ShortcutsService } from './shortcuts-dialog.component';
           (send)="send($event)"
           (typing)="onTyping()"
           (stoppedTyping)="onStopTyping()"
+          (focused)="keepLatestInView()"
         />
       </div>
     }
@@ -377,6 +388,50 @@ export class RoomPage {
       await this.messagesSvc.remove(room, msg);
     } catch {
       this.toast.error('Couldn’t delete the message.');
+    }
+  }
+
+  private list = viewChild(MessageListComponent);
+
+  /** When the on-screen keyboard opens, keep the newest message visible if we were near the bottom. */
+  keepLatestInView(): void {
+    const list = this.list();
+    if (!list?.isNearBottom()) return;
+    setTimeout(() => list.scrollToBottom(), 300);
+  }
+
+  // ---- touch action sheet ----
+  actionsFor = signal<DisplayMessage | null>(null);
+  editRequest = signal<{ id: string; n: number } | null>(null);
+
+  sheetReact(mood: MoodId): void {
+    const msg = this.actionsFor();
+    this.actionsFor.set(null);
+    if (msg) this.onReact({ msg, mood });
+  }
+
+  async sheetAct(action: MessageAction): Promise<void> {
+    const msg = this.actionsFor();
+    this.actionsFor.set(null);
+    if (!msg) return;
+    switch (action) {
+      case 'reply':
+        this.startReply(msg);
+        break;
+      case 'copy':
+        try {
+          await navigator.clipboard.writeText(msg.text);
+          this.toast.show('Copied');
+        } catch {
+          this.toast.error('Couldn’t copy the text.');
+        }
+        break;
+      case 'edit':
+        this.editRequest.set({ id: msg.id, n: (this.editRequest()?.n ?? 0) + 1 });
+        break;
+      case 'delete':
+        await this.onRemove(msg);
+        break;
     }
   }
 

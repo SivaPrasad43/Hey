@@ -17,6 +17,7 @@ import { ReplyRef } from '../../core/models';
 import { MOODS, MoodId, getMood, moodForShortcut } from '../../core/moods';
 import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import { ChatStateService } from './chat-state.service';
+import { isTouchUi } from './gestures';
 
 const MAX_LINES = 5;
 const MAX_LENGTH = 2000;
@@ -91,7 +92,9 @@ const SUGGEST_DELAY_MS = 400;
           #input
           id="composer-input"
           rows="2"
-          class="placeholder:text-muted-foreground block max-h-48 min-h-16 w-full resize-none bg-transparent px-4 pt-3.5 pb-1 text-[0.95rem] leading-6 outline-none"
+          [attr.enterkeyhint]="touch ? 'enter' : 'send'"
+          (focus)="focused.emit()"
+          class="placeholder:text-muted-foreground block max-h-48 min-h-16 w-full max-md:max-h-32 max-md:min-h-11 resize-none bg-transparent px-4 pt-3.5 pb-1 text-[0.95rem] leading-6 outline-none"
           [maxLength]="maxLength"
           [value]="text()"
           (input)="onInput($event)"
@@ -170,6 +173,9 @@ export class ComposerComponent {
   /** Message being replied to, if any. */
   replyTo = input<ReplyRef | null>(null);
   cancelReply = output<void>();
+  /** The text box got focus (the room keeps the newest message in view when the keyboard opens). */
+  focused = output<void>();
+  readonly touch = isTouchUi();
   send = output<{ text: string; mood: MoodId }>();
   typing = output<void>();
   stoppedTyping = output<void>();
@@ -275,7 +281,8 @@ export class ComposerComponent {
   }
 
   onEnter(e: KeyboardEvent): void {
-    if (e.shiftKey || e.isComposing) return;
+    // Phones: Enter adds a line (like common chat apps); the send button sends.
+    if (e.shiftKey || e.isComposing || isTouchUi()) return;
     e.preventDefault();
     this.submit();
   }

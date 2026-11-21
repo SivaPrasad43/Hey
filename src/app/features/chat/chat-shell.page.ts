@@ -52,19 +52,31 @@ interface RoomItem {
   ],
     changeDetection: ChangeDetectionStrategy.OnPush,
       template: `
-    <div class="flex h-svh">
+    <div class="flex h-dvh">
       <aside
         class="bg-sidebar text-sidebar-foreground border-sidebar-border flex w-full min-w-0 flex-col md:w-72 md:shrink-0 md:border-r"
         [class.max-md:hidden]="!atRoot()"
         aria-label="Chats"
       >
-        <div class="flex h-16 shrink-0 items-center gap-2 px-5 pt-[env(safe-area-inset-top)]">
+        <div class="flex h-16 shrink-0 items-center gap-2 px-5 pt-[env(safe-area-inset-top)] max-md:h-14 max-md:px-4">
           <span class="bg-primary text-primary-foreground flex size-7 items-center justify-center rounded-full text-xs font-bold">H</span>
           <span class="text-base font-bold tracking-tight">Hey</span>
+          <!-- phone: account menu lives in the app bar -->
+          <button
+            type="button"
+            class="ml-auto rounded-full md:hidden"
+            [hlmDropdownMenuTrigger]="userMenu"
+            align="end"
+            aria-label="Account menu"
+          >
+            <app-avatar [name]="auth.displayName()" [uid]="auth.uid() ?? ''" [color]="me()?.avatarColor" />
+          </button>
         </div>
+        <!-- phone: large title like common chat apps -->
+        <h1 class="text-display px-4 pb-3 md:hidden">{{ mobileTitle() }}</h1>
 
         <div class="flex flex-col gap-3 px-4">
-          <button hlmBtn class="w-full" (click)="newChat.open('dm')">
+          <button hlmBtn class="w-full max-md:hidden" (click)="newChat.open('dm')">
             <ng-icon name="lucidePlus" />
             New chat
           </button>
@@ -75,7 +87,7 @@ interface RoomItem {
           </hlm-input-group>
         </div>
 
-        <nav class="mt-5 flex flex-col gap-1 px-4" aria-label="Sections">
+        <nav class="mt-5 flex flex-col gap-1 px-4 max-md:hidden" aria-label="Sections">
           @for (s of sections; track s.id) {
             <button
               type="button"
@@ -94,9 +106,9 @@ interface RoomItem {
           }
         </nav>
 
-        <div class="mt-4 flex min-h-0 flex-1 flex-col">
-          <p class="text-muted-foreground px-8 pb-2 text-xs font-semibold tracking-wide uppercase">{{ sectionLabel() }}</p>
-          <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-3">
+        <div class="mt-4 flex min-h-0 flex-1 flex-col max-md:mt-2">
+          <p class="text-muted-foreground px-8 pb-2 text-xs font-semibold tracking-wide uppercase max-md:hidden">{{ sectionLabel() }}</p>
+          <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-3 max-md:px-2 max-md:pb-40">
             @if (!roomsLoaded()) {
               @for (i of [1, 2, 3, 4]; track i) {
                 <div class="flex items-center gap-2 px-2 py-2" aria-hidden="true">
@@ -110,7 +122,7 @@ interface RoomItem {
                   <li class="group/item relative">
                     <a
                       [routerLink]="['/chat', item.room.id]"
-                      class="hover:bg-sidebar-accent flex items-start gap-3 rounded-xl px-3 py-2.5 pr-9 transition-colors"
+                      class="hover:bg-sidebar-accent active:bg-sidebar-accent flex items-start gap-3 rounded-xl px-3 py-2.5 pr-9 transition-colors max-md:py-3.5"
                       [class]="item.room.id === state.activeRoomId() ? 'bg-sidebar-accent' : ''"
                       [attr.aria-current]="item.room.id === state.activeRoomId() ? 'page' : null"
                     >
@@ -123,7 +135,7 @@ interface RoomItem {
                       }
                       <span class="min-w-0 flex-1">
                         <span class="flex items-center gap-1.5">
-                          <span class="truncate text-sm" [class.font-semibold]="item.unread">{{ item.title }}</span>
+                          <span class="truncate text-sm max-md:text-[0.95rem]" [class.font-semibold]="item.unread">{{ item.title }}</span>
                           @if (item.favorite) {
                             <ng-icon name="lucideStar" size="12" class="text-muted-foreground shrink-0" aria-label="Favorite" />
                           }
@@ -167,7 +179,7 @@ interface RoomItem {
           </div>
         </div>
 
-        <div class="border-sidebar-border flex flex-col gap-1 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div class="border-sidebar-border flex flex-col gap-1 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] max-md:hidden">
           <a routerLink="/chat/settings" routerLinkActive="bg-sidebar-accent !text-foreground font-semibold" class="hover:bg-sidebar-accent text-muted-foreground flex h-10 items-center gap-3 rounded-full px-4 text-sm font-medium">
             <ng-icon name="lucideSettings" class="text-muted-foreground" /> Settings
           </a>
@@ -192,10 +204,54 @@ interface RoomItem {
         </div>
       </aside>
 
-      <main class="bg-background min-w-0 flex-1 flex-col" [class]="atRoot() ? 'hidden md:flex' : 'flex'">
+      <main class="bg-background min-w-0 flex-1 flex-col" [class]="(atRoot() ? 'hidden md:flex' : 'flex') + (showTabBar() ? ' max-md:pb-[calc(4rem+env(safe-area-inset-bottom))]' : '')">
         <router-outlet />
       </main>
     </div>
+
+    <!-- phone: floating new-chat button -->
+    @if (atRoot()) {
+      <button
+        hlmBtn
+        size="icon-lg"
+        class="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 size-14 rounded-2xl shadow-pop md:hidden"
+        aria-label="New chat"
+        (click)="newChat.open('dm')"
+      >
+        <ng-icon name="lucideSquarePen" size="22" />
+      </button>
+    }
+
+    <!-- phone: bottom tab bar -->
+    @if (showTabBar()) {
+      <nav
+        class="bg-background/95 supports-backdrop-filter:bg-background/80 fixed inset-x-0 bottom-0 z-30 border-t backdrop-blur md:hidden"
+        aria-label="Main"
+      >
+        <div class="grid grid-cols-4 pb-[env(safe-area-inset-bottom)]">
+          @for (t of tabs; track t.id) {
+            <button
+              type="button"
+              class="relative flex h-16 flex-col items-center justify-center gap-1 text-[0.7rem] font-semibold transition-colors"
+              [class]="activeTab() === t.id ? 'text-foreground' : 'text-muted-foreground'"
+              [attr.aria-current]="activeTab() === t.id ? 'page' : null"
+              (click)="openTab(t.id)"
+            >
+              <span class="relative flex h-8 w-14 items-center justify-center rounded-full transition-colors" [class.bg-muted]="activeTab() === t.id">
+                <ng-icon [name]="t.icon" size="20" />
+                @if (t.id === 'chats' && unreadCount()) {
+                  <span class="bg-primary text-primary-foreground absolute -top-1 right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.6rem] tabular-nums">{{ unreadCount() > 9 ? '9+' : unreadCount() }}</span>
+                }
+                @if (t.id === 'archive' && archiveUnread()) {
+                  <span class="bg-primary absolute top-0.5 right-3 size-2 rounded-full"></span>
+                }
+              </span>
+              {{ t.label }}
+            </button>
+          }
+        </div>
+      </nav>
+    }
 
     <ng-template #roomMenu let-item>
       <hlm-dropdown-menu class="w-44">
@@ -240,6 +296,13 @@ export class ChatShellPage {
     { id: 'favorites', label: 'Favorites', icon: 'lucideStar' },
     { id: 'archive', label: 'Archive', icon: 'lucideArchive' },
   ];
+  /** Phone bottom tabs. */
+  readonly tabs: { id: Section | 'settings'; label: string; icon: string }[] = [
+    { id: 'chats', label: 'Chats', icon: 'lucideMessageSquare' },
+    { id: 'favorites', label: 'Favorites', icon: 'lucideStar' },
+    { id: 'archive', label: 'Archive', icon: 'lucideArchive' },
+    { id: 'settings', label: 'Settings', icon: 'lucideSettings' },
+  ];
   readonly themes: { id: ThemeMode; label: string }[] = [
     { id: 'light', label: 'Light' },
     { id: 'dark', label: 'Dark' },
@@ -261,6 +324,28 @@ export class ChatShellPage {
   limit = signal(PAGE);
 
   /** True on /chat itself: on mobile the list shows, otherwise the routed pane does. */
+  private url = toSignal(
+    this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map(() => this.router.url.split('?')[0]),
+    ),
+    { initialValue: this.router.url.split('?')[0] },
+  );
+  /** Bottom tabs show on the list and on Settings/Help, never inside a conversation. */
+  showTabBar = computed(() => ['/chat', '/chat/settings', '/chat/help'].includes(this.url()));
+  activeTab = computed<Section | 'settings'>(() => (this.url().startsWith('/chat/settings') ? 'settings' : this.section()));
+  mobileTitle = computed(() => ({ chats: 'Chats', favorites: 'Favorites', archive: 'Archive' })[this.section()]);
+  unreadCount = computed(() => this.allItems().filter((i) => i.unread && !i.archived).length);
+
+  openTab(id: Section | 'settings'): void {
+    if (id === 'settings') {
+      void this.router.navigate(['/chat/settings']);
+      return;
+    }
+    this.setSection(id);
+    if (this.url() !== '/chat') void this.router.navigate(['/chat']);
+  }
+
   atRoot = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),

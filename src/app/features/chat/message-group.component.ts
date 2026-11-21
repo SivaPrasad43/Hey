@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { NgIcon } from '@ng-icons/core';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
@@ -11,6 +11,8 @@ import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import { DisplayMessage, Row, reactionChips } from './message-rows';
 import { ReactionBurstComponent } from './reaction-burst.component';
 import { Receipt, receiptFor } from './receipts';
+import { LONG_PRESS_MS, PRESS_SLOP_PX, isTouchUi, swipeState } from './gestures';
+import { vibrate } from '../../core/haptics';
 import { Token, formatText, isEmojiOnly, stickerMood } from './message-format';
 
 type Run = Extract<Row, { kind: 'run' }>;
@@ -49,15 +51,31 @@ export interface EditEvent {
         @for (item of run().items; track item.msg.id; let last = $last) {
           @let m = moodOf(item.msg);
           <div
-            class="group/line relative flex max-w-full items-center gap-1.5"
+            class="group/line relative flex max-w-full touch-pan-y items-center gap-1.5 select-none md:select-auto"
             [class.flex-row-reverse]="!run().own"
             [attr.data-mid]="item.msg.id"
             (click)="onLineTap($event, item.msg.id)"
+            (pointerdown)="onPointerDown($event, item.msg)"
+            (pointermove)="onPointerMove($event)"
+            (pointerup)="onPointerUp()"
+            (pointercancel)="resetGesture()"
+            (contextmenu)="onContextMenu($event, item.msg)"
           >
+            <!-- swipe-to-reply hint (phones) -->
+            @if (swipe().id === item.msg.id && swipe().offset > 6) {
+              <span
+                class="text-muted-foreground absolute top-1/2 left-0 flex size-8 -translate-y-1/2 items-center justify-center rounded-full transition-colors"
+                [class]="swipe().armed ? 'bg-primary text-primary-foreground' : 'bg-muted'"
+                [style.opacity]="swipe().offset / 56"
+                aria-hidden="true"
+              >
+                <ng-icon name="lucideReply" size="16" />
+              </span>
+            }
             <!-- hover / tap toolbar, on the inner side of the bubble -->
             @if (!item.msg.pending && !item.msg.deleted && editingId() !== item.msg.id) {
               <div
-                class="bg-popover border-border pointer-events-none flex shrink-0 items-center gap-0.5 rounded-full border p-1 opacity-0 shadow-float transition-opacity group-hover/line:pointer-events-auto group-hover/line:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100 has-[[aria-expanded=true]]:pointer-events-auto has-[[aria-expanded=true]]:opacity-100 data-[open=true]:pointer-events-auto data-[open=true]:opacity-100"
+                class="bg-popover border-border pointer-events-none flex shrink-0 [@media(hover:none)]:hidden items-center gap-0.5 rounded-full border p-1 opacity-0 shadow-float transition-opacity group-hover/line:pointer-events-auto group-hover/line:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100 has-[[aria-expanded=true]]:pointer-events-auto has-[[aria-expanded=true]]:opacity-100 data-[open=true]:pointer-events-auto data-[open=true]:opacity-100"
                 [attr.data-open]="activeId() === item.msg.id"
               >
                 <button hlmBtn variant="ghost" size="icon-xs" aria-label="Reply" hlmTooltip="Reply" (click)="reply.emit(item.msg)">
@@ -86,7 +104,12 @@ export interface EditEvent {
               </div>
             }
 
-            <div class="flex min-w-0 flex-col" [class]="run().own ? 'items-end' : 'items-start'">
+            <div
+              class="flex min-w-0 flex-col"
+              [class]="run().own ? 'items-end' : 'items-start'"
+              [style.transform]="swipe().id === item.msg.id && swipe().offset ? 'translateX(' + swipe().offset + 'px)' : null"
+              [style.transition]="swipe().id === item.msg.id && swipe().dragging ? 'none' : 'transform 180ms ease-out'"
+            >
               <div
                 class="relative min-w-0 rounded-2xl px-3.5 py-2 shadow-soft transition-[box-shadow]"
                 [class]="bubbleClass(item.msg, last)"
@@ -302,6 +325,10 @@ export class MessageGroupComponent {
   edit = output<EditEvent>();
   remove = output<DisplayMessage>();
   reply = output<DisplayMessage>();
+  /** Long-press on touch devices: open the action sheet. */
+  longPress = output<DisplayMessage>();
+  /** Ask this group to start editing a message (from the action sheet). */
+  editRequest = input<{ id: string; n: number } | null>(null);
   /** Scroll to a quoted message. */
   jump = output<string>();
 
@@ -316,6 +343,15 @@ export class MessageGroupComponent {
   playToken = signal<Record<string, number>>({});
   /** Burst tokens for my own reactions, keyed by `${msgId}:${mood}`. */
   burstToken = signal<Record<string, number>>({});
+
+  constructor() {
+    effect(() => {
+      const req = this.editRequest();
+      if (!req) return;
+      const item = untracked(() => this.run().items.find((i) => i.msg.id === req.id));
+      if (item) untracked(() => this.startEdit(item.msg));
+    });
+  }
 
   moodOf(m: DisplayMessage | MoodId) {
     return getMood(typeof m === 'string' ? m : m.mood);
@@ -400,8 +436,84 @@ export class MessageGroupComponent {
   }
 
   onLineTap(e: MouseEvent, id: string): void {
+    if (isTouchUi() || this.suppressTap) {
+      this.suppressTap = false;
+      return; // phones use long-press and swipe instead of a tap toolbar
+    }
     if ((e.target as Element).closest('button, textarea, a')) return;
     this.activeId.update((cur) => (cur === id ? null : id));
+  }
+
+  // ----- touch gestures: long-press opens actions, swipe right replies -----
+  swipe = signal<{ id: string | null; offset: number; armed: boolean; dragging: boolean }>({
+    id: null,
+    offset: 0,
+    armed: false,
+    dragging: false,
+  });
+  private gesture: { msg: DisplayMessage; x: number; y: number; timer?: ReturnType<typeof setTimeout>; mode: 'press' | 'swipe' | 'none' } | null = null;
+  private suppressTap = false;
+
+  onPointerDown(e: PointerEvent, msg: DisplayMessage): void {
+    if (e.pointerType !== 'touch' || msg.pending || this.editingId() === msg.id) return;
+    if ((e.target as Element).closest('a, textarea')) return;
+    const g: NonNullable<typeof this.gesture> = { msg, x: e.clientX, y: e.clientY, mode: 'press' };
+    g.timer = setTimeout(() => {
+      if (this.gesture !== g || g.mode !== 'press') return;
+      g.mode = 'none';
+      this.suppressTap = true;
+      vibrate('happy');
+      this.longPress.emit(msg);
+    }, LONG_PRESS_MS);
+    this.gesture = g;
+  }
+
+  onPointerMove(e: PointerEvent): void {
+    const g = this.gesture;
+    if (!g || g.mode === 'none') return;
+    const dx = e.clientX - g.x;
+    const dy = e.clientY - g.y;
+    if (g.mode === 'press' && Math.hypot(dx, dy) > PRESS_SLOP_PX) {
+      clearTimeout(g.timer);
+      g.mode = g.msg.deleted ? 'none' : 'swipe';
+    }
+    if (g.mode !== 'swipe') return;
+    const st = swipeState(dx, dy);
+    if (st.cancelled) {
+      g.mode = 'none';
+      this.swipe.set({ id: null, offset: 0, armed: false, dragging: false });
+      return;
+    }
+    const wasArmed = this.swipe().armed;
+    this.swipe.set({ id: g.msg.id, offset: st.offset, armed: st.armed, dragging: true });
+    if (st.armed && !wasArmed) vibrate('happy');
+  }
+
+  onPointerUp(): void {
+    const g = this.gesture;
+    if (g?.mode === 'swipe' && this.swipe().armed) {
+      this.suppressTap = true;
+      this.reply.emit(g.msg);
+    }
+    this.resetGesture();
+  }
+
+  resetGesture(): void {
+    if (this.gesture?.timer) clearTimeout(this.gesture.timer);
+    this.gesture = null;
+    this.swipe.set({ id: null, offset: 0, armed: false, dragging: false });
+  }
+
+  /** Touch long-press fires `contextmenu` on some browsers: use it, and hide the native menu. */
+  onContextMenu(e: MouseEvent, msg: DisplayMessage): void {
+    if (!isTouchUi()) return;
+    e.preventDefault();
+    if (this.gesture?.mode === 'press') {
+      clearTimeout(this.gesture.timer);
+      this.gesture.mode = 'none';
+      this.suppressTap = true;
+      this.longPress.emit(msg);
+    }
   }
 
   startEdit(m: DisplayMessage): void {

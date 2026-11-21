@@ -110,6 +110,8 @@ const LOAD_MORE_PX = 150;
                   (edit)="edit.emit($event)"
                   (remove)="remove.emit($event)"
                   (reply)="reply.emit($event)"
+                  (longPress)="longPress.emit($event)"
+                  [editRequest]="editRequest()"
                   (jump)="jumpTo($event)"
                 />
               }
@@ -169,6 +171,8 @@ export class MessageListComponent implements AfterViewChecked {
   edit = output<EditEvent>();
   remove = output<DisplayMessage>();
   reply = output<DisplayMessage>();
+  longPress = output<DisplayMessage>();
+  editRequest = input<{ id: string; n: number } | null>(null);
   /** People typing right now, with their current feeling. */
   typers = input<{ uid: string; name: string; mood: MoodId }[]>([]);
 
@@ -238,6 +242,10 @@ export class MessageListComponent implements AfterViewChecked {
     } else {
       el.scrollTop = el.scrollHeight - p.fromBottom;
     }
+  }
+
+  isNearBottom(): boolean {
+    return this.atBottom();
   }
 
   scrollToBottom(smooth = false): void {
