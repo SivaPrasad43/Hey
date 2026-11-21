@@ -45,6 +45,8 @@ import { NewChatService } from './new-chat-dialog.component';
 import { ShortcutsService } from './shortcuts-dialog.component';
 
 
+import { recentMembers } from './recent-members';
+
 @Component({
     selector: 'app-room-page',
     imports: [RouterLink, NgIcon, HlmButtonImports, HlmEmptyImports, HlmTooltipImports, AvatarComponent, ComposerComponent, MessageListComponent, RoomMoodComponent, EmotionFaceComponent, RoomInfoSheetComponent, MessageActionsSheetComponent],
@@ -79,6 +81,19 @@ import { ShortcutsService } from './shortcuts-dialog.component';
             <h1 class="text-title truncate">{{ title() }}</h1>
             <p class="text-muted-foreground truncate text-xs" aria-live="polite">{{ typingLabel() || subtitle() }}</p>
           </div>
+          @if (r.type === 'group' && stack().length) {
+            <!-- latest members, overlapping -->
+            <div class="mr-1 flex items-center" [hlmTooltip]="stackNames()" [attr.aria-label]="'Recently active: ' + stackNames()" role="img">
+              @for (u of stack(); track u.uid; let i = $index) {
+                <span class="relative flex rounded-full ring-2 ring-white" [class.-ml-1.5]="i > 0">
+                  <app-avatar size="sm" [name]="u.name" [uid]="u.uid" [color]="u.color" />
+                </span>
+              }
+              @if (r.members.length > stack().length) {
+                <span class="bg-muted text-muted-foreground relative -ml-1.5 flex size-6 ring-white items-center justify-center rounded-full text-[0.65rem] font-semibold ring-2 max-sm:hidden">+{{ r.members.length - stack().length }}</span>
+              }
+            </div>
+          }
           <app-room-mood [messages]="messages()" [filter]="filter()" (filterChange)="filter.set($event)" />
           <app-room-info-sheet [room]="r" [users]="usersById()" [messages]="messages()" [filter]="filter()" (filterChange)="filter.set($event)" />
         } @else {
@@ -189,6 +204,20 @@ export class RoomPage {
     const online = r.members.filter((m) => isOnline(this.usersById().get(m), now)).length;
     return `${r.members.length} member${r.members.length === 1 ? '' : 's'} · ${online} online`;
   });
+
+  /** Header avatar stack: the four most recently active members. */
+  stack = computed(() => {
+    const r = this.room();
+    if (!r || r.type !== 'group') return [];
+    const users = this.usersById();
+    return recentMembers(r.members, this.messages(), users).map((uid) => ({
+      uid,
+      name: users.get(uid)?.displayName ?? r.memberNames?.[uid] ?? 'Someone',
+      label: uid === this.auth.uid() ? 'You' : (users.get(uid)?.displayName ?? r.memberNames?.[uid] ?? 'Someone'),
+      color: users.get(uid)?.avatarColor,
+    }));
+  });
+  stackNames = computed(() => this.stack().map((u) => u.label).join(', '));
 
   // ---- messages ----
   /** page key (0 = newest, -1, -2… older) -> live messages in that page */
