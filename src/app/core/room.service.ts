@@ -21,14 +21,14 @@ export function dmId(a: string, b: string): string {
 
 /** Name to show for a room from the viewer's perspective. */
 export function roomTitle(room: Room, viewerUid: string | null): string {
-  if (room.type !== 'dm') return room.name;
-  const other = room.members.find((m) => m !== viewerUid) ?? viewerUid ?? '';
-  return room.memberNames?.[other] ?? 'Direct message';
+  if (room.type !== 'dm') return room.name || 'Untitled group';
+  const other = (room.members ?? []).find((m) => m !== viewerUid) ?? viewerUid ?? '';
+  return room.memberNames?.[other] || 'Direct message';
 }
 
 export function otherMember(room: Room, viewerUid: string | null): string | null {
   if (room.type !== 'dm') return null;
-  return room.members.find((m) => m !== viewerUid) ?? null;
+  return (room.members ?? []).find((m) => m !== viewerUid) ?? null;
 }
 
 @Injectable({ providedIn: 'root' })

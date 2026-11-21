@@ -327,7 +327,7 @@ export class ChatShellPage {
     const inSection = new Set(
       filterRooms(this.allItems().map((i) => i.room), this.section(), me?.favorites, me?.archived).map((r) => r.id),
     );
-    return this.allItems().filter((i) => inSection.has(i.room.id) && (!q || i.title.toLowerCase().includes(q)));
+    return this.allItems().filter((i) => inSection.has(i.room.id) && (!q || (i.title ?? '').toLowerCase().includes(q)));
   });
   visibleItems = computed(() => this.items().slice(0, this.limit()));
   emptyText = computed(() => {

@@ -40,6 +40,26 @@ export function isOnline(user: Pick<AppUser, 'lastSeen'> & { online?: boolean } 
 
 type UserDoc = AppUser & { online?: boolean };
 
+/**
+ * Make raw `users/*` documents safe to render: older or partially written docs may lack a name
+ * (or even a uid field). Falls back to the email prefix, then a generic label, and sorts by name.
+ */
+export function normalizeUsers(list: Partial<UserDoc>[]): UserDoc[] {
+  return list
+    .filter((u): u is Partial<UserDoc> & { uid: string } => typeof u.uid === 'string' && u.uid.length > 0)
+    .map((u) => ({
+      ...u,
+      uid: u.uid,
+      email: typeof u.email === 'string' ? u.email : '',
+      displayName:
+        (typeof u.displayName === 'string' && u.displayName.trim()) ||
+        (typeof u.email === 'string' && u.email.split('@')[0]) ||
+        'Unknown user',
+      avatarColor: typeof u.avatarColor === 'string' ? u.avatarColor : colorFor(u.uid),
+    }))
+    .sort((a, b) => a.displayName.localeCompare(b.displayName));
+}
+
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private db = inject(Firestore);
@@ -48,9 +68,9 @@ export class UserService {
 
   /** Small-community app: keep the user directory live in memory. */
   readonly all$: Observable<UserDoc[]> = (
-    collectionData(query(collection(this.db, 'users'), limit(500)), { idField: 'uid' }) as Observable<UserDoc[]>
+    collectionData(query(collection(this.db, 'users'), limit(500)), { idField: 'uid' }) as Observable<Partial<UserDoc>[]>
   ).pipe(
-    map((list) => list.sort((a, b) => a.displayName.localeCompare(b.displayName))),
+    map(normalizeUsers),
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 
