@@ -5,6 +5,10 @@ import { MoodId } from './moods';
  * it only answers when the signal is clear, and never sends text anywhere.
  */
 const RULES: Record<MoodId, { words: RegExp[]; symbols: RegExp[] }> = {
+  calm: {
+    words: [/\b(calm|relax(ed|ing)?|chill(ing)?|peaceful|no worries|no rush|take it easy|all good|breathe|cozy|slow day)\b/i],
+    symbols: [/😌|🧘|🍃|🌿|☕/],
+  },
   happy: {
     words: [/\b(ha(ha)+|lol|lmao|yay+|great|awesome|amazing|nice|glad|happy|congrats|congratulations|excited|can'?t wait|let'?s go|woo+)\b/i],
     symbols: [/:-?\)|:D|😀|😃|😄|😁|😂|🤣|😊|🎉|🥳|👍/],
@@ -28,7 +32,7 @@ const THRESHOLD = 2;
 export function suggestEmotion(text: string): MoodId | null {
   const t = text.trim();
   if (t.length < 3) return null;
-  const scores: Record<MoodId, number> = { happy: 0, angry: 0, sad: 0, lovely: 0 };
+  const scores: Record<MoodId, number> = { calm: 0, happy: 0, angry: 0, sad: 0, lovely: 0 };
   for (const id of Object.keys(RULES) as MoodId[]) {
     for (const re of RULES[id].words) scores[id] += (t.match(new RegExp(re, 'gi')) ?? []).length * 2;
     for (const re of RULES[id].symbols) scores[id] += (t.match(new RegExp(re, 'g')) ?? []).length * 2;

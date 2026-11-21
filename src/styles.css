@@ -10,10 +10,12 @@
 @theme inline {
   --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --color-mood-calm: var(--mood-calm);
   --color-mood-happy: var(--mood-happy);
   --color-mood-angry: var(--mood-angry);
   --color-mood-sad: var(--mood-sad);
   --color-mood-lovely: var(--mood-lovely);
+  --color-mood-calm-fill: var(--mood-calm-fill);
   --color-mood-happy-fill: var(--mood-happy-fill);
   --color-mood-angry-fill: var(--mood-angry-fill);
   --color-mood-sad-fill: var(--mood-sad-fill);
@@ -29,18 +31,21 @@
 color-scheme: light;
 
 /* Feelings: one family, matched lightness, slightly softened chroma. */
+--mood-calm: oklch(0.68 0.1 175);
 --mood-happy: oklch(0.82 0.17 90);
 --mood-angry: oklch(0.63 0.2 25);
 --mood-sad: oklch(0.63 0.17 255);
 --mood-lovely: oklch(0.65 0.2 352);
 /* Bubble fills for your own messages. Light: soft pastels with ink text; dark: deep fills
    with white text. Both pass WCAG AA (see moods.spec: fillLightOklch / fillOklch). */
+--mood-calm-fill: oklch(0.92 0.05 172);
 --mood-happy-fill: oklch(0.94 0.1 98);
 --mood-angry-fill: oklch(0.9 0.06 25);
 --mood-sad-fill: oklch(0.9 0.055 255);
 --mood-lovely-fill: oklch(0.9 0.065 350);
 --on-fill: oklch(0.24 0.02 285);
 --on-fill-ink: oklch(0.24 0.02 285);
+--mood-calm-ring: oklch(0.68 0.1 175 / 0.22);
 --mood-happy-ring: oklch(0.82 0.17 90 / 0.25);
 --mood-angry-ring: oklch(0.63 0.2 25 / 0.2);
 --mood-sad-ring: oklch(0.63 0.17 255 / 0.2);
@@ -86,15 +91,18 @@ color-scheme: light;
 :root.dark {
 color-scheme: dark;
 /* Ink: deep blue-black surfaces (hue ~280) */
+--mood-calm: oklch(0.78 0.09 175);
 --mood-happy: oklch(0.87 0.16 95);
 --mood-angry: oklch(0.7 0.17 22);
 --mood-sad: oklch(0.72 0.14 252);
 --mood-lovely: oklch(0.72 0.17 350);
+--mood-calm-fill: oklch(0.5 0.085 178);
 --mood-happy-fill: oklch(0.86 0.16 95);
 --mood-angry-fill: oklch(0.53 0.19 27);
 --mood-sad-fill: oklch(0.52 0.16 258);
 --mood-lovely-fill: oklch(0.53 0.19 355);
 --on-fill: oklch(1 0 0);
+--mood-calm-ring: oklch(0.78 0.09 175 / 0.25);
 --mood-happy-ring: oklch(0.87 0.16 95 / 0.25);
 --mood-angry-ring: oklch(0.7 0.17 22 / 0.25);
 --mood-sad-ring: oklch(0.72 0.14 252 / 0.25);
@@ -184,6 +192,10 @@ body {
   80% { transform: translateY(1px) scale(1); }
   100% { transform: none; }
 }
+@keyframes emo-in-calm {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: none; }
+}
 @keyframes emo-in-angry {
   0% { opacity: 0; transform: translateX(0); }
   15% { opacity: 1; transform: translateX(-4px); }
@@ -204,6 +216,7 @@ body {
   65% { transform: scale(1.01); }
   100% { transform: none; }
 }
+.emo-in-calm { animation: emo-in-calm 1100ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 .emo-in-happy { animation: emo-in-happy 520ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 .emo-in-angry { animation: emo-in-angry 480ms ease-out both; }
 .emo-in-sad { animation: emo-in-sad 900ms ease-out both; }
@@ -211,10 +224,12 @@ body {
 
 /* Faces: whole-face motion per feeling while .playing */
 .emo-face svg { transform-origin: 50% 80%; }
+@keyframes face-calm { 0%, 100% { transform: scale(1) rotate(0); } 40% { transform: scale(1.06) rotate(-4deg); } 70% { transform: scale(1.03) rotate(2deg); } }
 @keyframes face-happy { 0%, 100% { transform: translateY(0) scale(1); } 30% { transform: translateY(-18%) scale(1.06, 0.96); } 55% { transform: translateY(0) scale(0.96, 1.05); } 75% { transform: translateY(-6%); } }
 @keyframes face-angry { 0%, 100% { transform: rotate(0) scale(1); } 15% { transform: rotate(-12deg) scale(1.08); } 30% { transform: rotate(10deg) scale(1.08); } 45% { transform: rotate(-8deg) scale(1.05); } 60% { transform: rotate(6deg); } 80% { transform: rotate(-2deg); } }
 @keyframes face-sad { 0%, 100% { transform: rotate(0) translateY(0); } 35% { transform: rotate(-10deg) translateY(8%); } 70% { transform: rotate(-6deg) translateY(6%); } }
 @keyframes face-lovely { 0%, 100% { transform: scale(1); } 20% { transform: scale(1.22); } 38% { transform: scale(1); } 56% { transform: scale(1.16); } 74% { transform: scale(1); } }
+.emo-face.playing.face-calm svg { animation: face-calm 1400ms ease-in-out; }
 .emo-face.playing.face-happy svg { animation: face-happy 700ms cubic-bezier(0.34, 1.56, 0.64, 1); }
 .emo-face.playing.face-angry svg { animation: face-angry 560ms ease-in-out; }
 .emo-face.playing.face-sad svg { animation: face-sad 950ms ease-in-out; }
@@ -235,7 +250,7 @@ body {
 .emo-flash { animation: emo-flash 1200ms ease-out; }
 
 @media (prefers-reduced-motion: reduce) {
-  .emo-in-happy, .emo-in-angry, .emo-in-sad, .emo-in-lovely { animation: emo-in-sad 200ms ease-out both; }
+  .emo-in-calm, .emo-in-happy, .emo-in-angry, .emo-in-sad, .emo-in-lovely { animation: emo-in-sad 200ms ease-out both; }
   .emo-face.playing *, .emo-face.playing svg { animation: none !important; }
   .emo-particle { display: none; }
   .emo-count-bump, .emo-flash { animation: none; }
@@ -243,19 +258,25 @@ body {
 
 /* Composer: feeling tabs on top of a roomy box. The selected tab shares the box's surface and
    border, and overlaps the box's top edge so they read as one shape. Unlayered on purpose. */
+/* One edge colour for box, selected tab and its feet, so they read as a single shape. */
+.composer {
+  --composer-edge: var(--border);
+  --composer-halo: transparent;
+  --tab-foot: 0.5rem;
+}
+.composer:has(.composer-box:hover) { --composer-edge: color-mix(in oklch, var(--border), var(--foreground) 15%); }
+.composer:focus-within {
+  --composer-edge: var(--composer-accent, var(--ring));
+  --composer-halo: var(--composer-ring, transparent);
+}
 .composer-box {
   position: relative;
   background-color: var(--background);
-  border: 1px solid var(--border);
+  border: 1px solid var(--composer-edge);
   border-radius: 1.25rem;
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 0 0 3px var(--composer-halo), var(--shadow-soft);
   cursor: text;
   transition: border-color 150ms ease, box-shadow 150ms ease;
-}
-.composer-box:hover { border-color: color-mix(in oklch, var(--border), var(--foreground) 15%); }
-.composer:focus-within .composer-box {
-  border-color: var(--composer-accent, var(--ring));
-  box-shadow: 0 0 0 3px var(--composer-ring, transparent), var(--shadow-soft);
 }
 .composer-tab {
   position: relative;
@@ -279,26 +300,45 @@ body {
 .composer-tab[aria-checked='true'] {
   color: var(--foreground);
   font-weight: 600;
-  background-color: var(--background);
-  border-color: var(--border);
-  /* cover the box's top border (and focus ring) under the tab so they join seamlessly */
+  /* a thin feeling-coloured accent along the top */
+  background:
+    linear-gradient(var(--composer-accent, var(--ring)), var(--composer-accent, var(--ring))) top center / calc(100% - 1.5rem) 2px no-repeat,
+    var(--background);
+  border-color: var(--composer-edge);
+  /* reach down over the box's top border (and its halo) so tab and box join seamlessly */
   margin-bottom: -4px;
   padding-bottom: 4px;
   height: calc(2.5rem + 4px);
   z-index: 1;
+  box-shadow: 0 -3px 0 0 var(--composer-halo), -3px 0 0 0 var(--composer-halo), 3px 0 0 0 var(--composer-halo);
 }
-.composer:focus-within .composer-tab[aria-checked='true'] {
-  border-color: var(--composer-accent, var(--ring));
-  box-shadow: 0 -3px 0 0 var(--composer-ring, transparent), -3px 0 0 0 var(--composer-ring, transparent), 3px 0 0 0 var(--composer-ring, transparent);
-}
-/* a thin feeling-coloured accent on top of the selected tab */
-.composer-tab[aria-checked='true']::before {
+.composer-tab[aria-checked='true']:focus-visible { box-shadow: inset 0 0 0 2px var(--ring); }
+/* curved feet: the tab's sides flare out into the box's top edge */
+.composer-tab[aria-checked='true']::before,
+.composer-tab[aria-checked='true']::after {
   content: '';
   position: absolute;
-  inset: -1px 0.75rem auto;
-  height: 2px;
-  border-radius: 0 0 2px 2px;
-  background: var(--composer-accent, var(--ring));
+  bottom: 0;
+  /* the tab reaches 4px into the box; the curve lands on the box's top border, 3px above our bottom */
+  width: var(--tab-foot);
+  height: calc(var(--tab-foot) + 4px);
+  pointer-events: none;
+  --foot: radial-gradient(
+    circle at var(--foot-at),
+    transparent calc(var(--tab-foot) - 1px),
+    var(--composer-edge) calc(var(--tab-foot) - 1px) var(--tab-foot),
+    var(--background) var(--tab-foot)
+  );
+}
+.composer-tab[aria-checked='true']::before {
+  right: 100%;
+  --foot-at: 0 1px;
+  background: var(--foot);
+}
+.composer-tab[aria-checked='true']::after {
+  left: 100%;
+  --foot-at: 100% 1px;
+  background: var(--foot);
 }
 
 /* Typing indicator dots */

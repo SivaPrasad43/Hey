@@ -13,10 +13,11 @@ import { HlmButtonImports } from '@spartan-ng/helm/button';
       <a hlmBtn variant="ghost" size="icon-sm" routerLink="/chat" class="md:hidden" aria-label="Back to chats">
         <ng-icon name="lucideChevronLeft" />
       </a>
-      <h1 class="text-title flex-1 truncate">{{ title() }}</h1>
+      <h1 class="text-title flex-1 truncate">{{ heading() }}</h1>
     </header>
   `,
 })
 export class PageHeaderComponent {
-  title = input('');
+  /** Not `title`: that would also become a native tooltip on the host element. */
+  heading = input('');
 }

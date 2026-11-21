@@ -22,7 +22,7 @@ const STEP_MS = 2200;
           <span class="font-medium">{{ line }}</span>
         </div>
         <p class="text-muted-foreground text-sm">
-          Same words. Sent <span class="text-foreground font-semibold">{{ m.adjective === 'loving' ? 'with love' : m.adjective === 'sad' ? 'sadly' : m.adjective === 'angry' ? 'angrily' : 'happily' }}</span>.
+          Same words. Sent <span class="text-foreground font-semibold">{{ m.adjective === 'loving' ? 'with love' : m.adjective === 'sad' ? 'sadly' : m.adjective === 'angry' ? 'angrily' : m.adjective === 'calm' ? 'calmly' : 'happily' }}</span>.
         </p>
       }
       <div class="flex gap-1.5">

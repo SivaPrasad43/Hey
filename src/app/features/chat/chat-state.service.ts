@@ -1,13 +1,12 @@
 import { Injectable, signal } from '@angular/core';
 import { DEFAULT_MOOD, MoodId, getMood } from '../../core/moods';
 
-const MOOD_KEY = 'hey-mood';
-
 /** UI state shared between the chat shell and the open room. */
 @Injectable({ providedIn: 'root' })
 export class ChatStateService {
   readonly activeRoomId = signal<string | null>(null);
-  readonly mood = signal<MoodId>(readMood());
+  /** Every session starts on the default feeling (Calm, or the one picked in Settings). */
+  readonly mood = signal<MoodId>(DEFAULT_MOOD);
 
   private defaultApplied = false;
 
@@ -20,18 +19,5 @@ export class ChatStateService {
 
   setMood(id: MoodId): void {
     this.mood.set(id);
-    try {
-      localStorage.setItem(MOOD_KEY, id);
-    } catch {
-      /* ignore */
-    }
-  }
-}
-
-function readMood(): MoodId {
-  try {
-    return getMood(localStorage.getItem(MOOD_KEY)).id;
-  } catch {
-    return DEFAULT_MOOD;
   }
 }

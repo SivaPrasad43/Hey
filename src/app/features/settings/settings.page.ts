@@ -12,7 +12,7 @@ import { HlmSwitchImports } from '@spartan-ng/helm/switch';
 import { hapticsEnabled, hapticsSupported, setHapticsEnabled, vibrate } from '../../core/haptics';
 import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import { AuthService, authErrorMessage } from '../../core/auth.service';
-import { MOODS, MoodId, getMood } from '../../core/moods';
+import { DEFAULT_MOOD, MOODS, MoodId, getMood } from '../../core/moods';
 import { ThemeMode, ThemeService } from '../../core/theme.service';
 import { ToastService } from '../../core/toast.service';
 import { AVATAR_COLORS, UserService, colorFor } from '../../core/user.service';
@@ -39,7 +39,7 @@ import { PageHeaderComponent } from '../page-header.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex h-full min-h-0 flex-col' },
   template: `
-    <app-page-header title="Settings" />
+    <app-page-header heading="Settings" />
     <div class="flex-1 overflow-y-auto">
       <form class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6" [formGroup]="form" (ngSubmit)="save()" novalidate>
         <section class="bg-card ring-foreground/10 shadow-soft grid gap-6 rounded-2xl p-6 ring-1 md:grid-cols-[200px_1fr] md:p-8">
@@ -101,7 +101,7 @@ import { PageHeaderComponent } from '../page-header.component';
           <hlm-field-group>
             <hlm-field>
               <span hlmFieldLabel class="font-semibold" id="mood-label">Default feeling</span>
-              <hlm-radio-group formControlName="defaultMood" class="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-labelledby="mood-label">
+              <hlm-radio-group formControlName="defaultMood" class="grid grid-cols-2 gap-3 sm:grid-cols-5" aria-labelledby="mood-label">
                 @for (m of moods; track m.id) {
                   <div class="flex items-center gap-2">
                     <hlm-radio [value]="m.id" [inputId]="'mood-' + m.id"><hlm-radio-indicator indicator /></hlm-radio>
@@ -200,7 +200,7 @@ export class SettingsPage {
   form = inject(NonNullableFormBuilder).group({
     displayName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(32), Validators.pattern(/\S/)]],
     avatarColor: [''],
-    defaultMood: ['happy' as MoodId],
+    defaultMood: [DEFAULT_MOOD as MoodId],
   });
   saving = signal(false);
   private loaded = false;

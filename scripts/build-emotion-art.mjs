@@ -8,12 +8,14 @@ const set = require('@iconify-json/fluent-emoji-flat/icons.json');
 
 const pick = {
   faces: {
+    calm: 'relieved-face',
     happy: 'beaming-face-with-smiling-eyes',
     angry: 'pouting-face',
     sad: 'pleading-face',
     lovely: 'smiling-face-with-heart-eyes',
   },
   particles: {
+    calm: 'herb',
     happy: 'sparkles',
     angry: 'anger-symbol',
     sad: 'droplet',

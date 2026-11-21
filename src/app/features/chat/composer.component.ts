@@ -41,7 +41,7 @@ const SUGGEST_DELAY_MS = 400;
       (submit)="$event.preventDefault(); submit()"
     >
       <!-- feeling tabs sit on the box's top edge; the selected one merges into it -->
-      <div class="relative z-10 flex items-end gap-1 pl-3 sm:pl-4">
+      <div class="relative z-10 flex items-end gap-1 pl-7">
         <div class="flex items-end gap-1" role="radiogroup" aria-label="How do you feel?" (keydown)="onBarKey($event)">
           @for (m of moods; track m.id) {
             <button
@@ -50,7 +50,6 @@ const SUGGEST_DELAY_MS = 400;
               class="composer-tab"
               [attr.aria-checked]="state.mood() === m.id"
               [tabindex]="state.mood() === m.id ? 0 : -1"
-              [hlmTooltip]="m.label + ' · Alt ' + m.shortcut"
               (click)="pick(m.id)"
             >
               <app-emotion-face [emotion]="m.id" [size]="20" [play]="state.mood() === m.id ? playToken() : null" [interactive]="true" />
@@ -136,7 +135,6 @@ const SUGGEST_DELAY_MS = 400;
               aria-label="Send message"
               aria-haspopup="menu"
               [attr.aria-expanded]="holdOpen()"
-              hlmTooltip="Send · hold for another feeling"
               (pointerdown)="startHold($event)"
               (pointerup)="cancelHold()"
               (pointerleave)="cancelHold()"

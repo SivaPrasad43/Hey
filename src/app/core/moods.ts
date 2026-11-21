@@ -1,4 +1,4 @@
-export type MoodId = 'happy' | 'angry' | 'sad' | 'lovely';
+export type MoodId = 'calm' | 'happy' | 'angry' | 'sad' | 'lovely';
 
 export interface Mood {
   id: MoodId;
@@ -38,6 +38,24 @@ export interface Mood {
 
 export const MOODS: readonly Mood[] = [
   {
+    id: 'calm',
+    label: 'Calm',
+    shortcut: 'C',
+    dot: 'bg-mood-calm',
+    color: 'text-mood-calm',
+    tint: 'bg-mood-calm/10 dark:bg-mood-calm/14',
+    edge: 'border-mood-calm/30 border-l-mood-calm',
+    pill: 'border-mood-calm/60',
+    fill: 'bg-mood-calm-fill',
+    fillOklch: [0.5, 0.085, 178],
+    fillLightOklch: [0.92, 0.05, 172],
+    text: '',
+    motion: 'emo-in-calm',
+    haptic: [10],
+    adjective: 'calm',
+    emoji: '😌',
+  },
+  {
     id: 'happy',
     label: 'Happy',
     shortcut: 'H',
@@ -55,6 +73,24 @@ export const MOODS: readonly Mood[] = [
     haptic: [15, 40, 15],
     adjective: 'happy',
     emoji: '😁',
+  },
+  {
+    id: 'lovely',
+    label: 'Lovely',
+    shortcut: 'L',
+    dot: 'bg-mood-lovely',
+    color: 'text-mood-lovely',
+    tint: 'bg-mood-lovely/10 dark:bg-mood-lovely/14',
+    edge: 'border-mood-lovely/30 border-l-mood-lovely',
+    pill: 'border-mood-lovely/60',
+    fill: 'bg-mood-lovely-fill',
+    fillOklch: [0.53, 0.19, 355],
+    fillLightOklch: [0.9, 0.065, 350],
+    text: '',
+    motion: 'emo-in-lovely',
+    haptic: [20, 90, 20],
+    adjective: 'loving',
+    emoji: '😍',
   },
   {
     id: 'angry',
@@ -92,27 +128,9 @@ export const MOODS: readonly Mood[] = [
     adjective: 'sad',
     emoji: '🥺',
   },
-  {
-    id: 'lovely',
-    label: 'Lovely',
-    shortcut: 'L',
-    dot: 'bg-mood-lovely',
-    color: 'text-mood-lovely',
-    tint: 'bg-mood-lovely/10 dark:bg-mood-lovely/14',
-    edge: 'border-mood-lovely/30 border-l-mood-lovely',
-    pill: 'border-mood-lovely/60',
-    fill: 'bg-mood-lovely-fill',
-    fillOklch: [0.53, 0.19, 355],
-    fillLightOklch: [0.9, 0.065, 350],
-    text: '',
-    motion: 'emo-in-lovely',
-    haptic: [20, 90, 20],
-    adjective: 'loving',
-    emoji: '😍',
-  },
 ];
 
-export const DEFAULT_MOOD: MoodId = 'happy';
+export const DEFAULT_MOOD: MoodId = 'calm';
 
 const BY_ID = new Map(MOODS.map((m) => [m.id, m]));
 /** Legacy data stored the label ("Happy"); accept both. */

@@ -20,11 +20,11 @@ describe('ComposerComponent emotion bar', () => {
 
   it('is a radio group that follows arrow keys', () => {
     const group = el().querySelector('[role="radiogroup"]') as HTMLElement;
-    expect(el().querySelectorAll('[role="radio"]').length).toBe(4);
+    expect(el().querySelectorAll('[role="radio"]').length).toBe(5);
     group.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     fixture.detectChanges();
-    expect(state.mood()).toBe('angry');
-    expect(el().querySelector('[role="radio"][aria-checked="true"]')!.textContent).toContain('Angry');
+    expect(state.mood()).toBe('lovely');
+    expect(el().querySelector('[role="radio"][aria-checked="true"]')!.textContent).toContain('Lovely');
   });
 
   it('suggests a feeling and applies it on Use', fakeAsync(() => {
@@ -53,8 +53,8 @@ describe('ComposerComponent emotion bar', () => {
     sendBtn.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
     fixture.detectChanges();
     const items = Array.from(el().querySelectorAll('[role="menuitem"]')) as HTMLButtonElement[];
-    expect(items.length).toBe(4);
-    items[3].click();
+    expect(items.length).toBe(5);
+    items[2].click();
     fixture.detectChanges();
     expect(sent).toEqual([{ text: 'hello', mood: 'lovely' }]);
     expect(state.mood()).toBe('happy');

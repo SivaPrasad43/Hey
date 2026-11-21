@@ -147,7 +147,6 @@ export interface EditEvent {
                           type="button"
                           class="mt-0.5 shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           [attr.aria-label]="'Feeling ' + m.label.toLowerCase() + '. Replay'"
-                          [hlmTooltip]="m.label"
                           (click)="replay(item.msg.id)"
                           (mouseenter)="replay(item.msg.id)"
                         >

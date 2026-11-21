@@ -1,4 +1,4 @@
-import { MOODS, dominantMood, getMood, moodForShortcut, moodMix } from './moods';
+import { DEFAULT_MOOD, MOODS, dominantMood, getMood, moodForShortcut, moodMix } from './moods';
 
 describe('moods', () => {
   it('has unique ids and shortcuts', () => {
@@ -6,11 +6,16 @@ describe('moods', () => {
     expect(new Set(MOODS.map((m) => m.shortcut)).size).toBe(MOODS.length);
   });
 
-  it('getMood accepts legacy labels and falls back to happy', () => {
+  it('getMood accepts legacy labels and falls back to calm', () => {
     expect(getMood('Angry').id).toBe('angry');
     expect(getMood('sad').id).toBe('sad');
-    expect(getMood(undefined).id).toBe('happy');
-    expect(getMood('nope').id).toBe('happy');
+    expect(getMood(undefined).id).toBe('calm');
+    expect(getMood('nope').id).toBe('calm');
+  });
+
+  it('calm comes first and is the default', () => {
+    expect(MOODS.map((m) => m.id)).toEqual(['calm', 'happy', 'lovely', 'angry', 'sad']);
+    expect(DEFAULT_MOOD).toBe('calm');
   });
 
   it('moodForShortcut matches Alt+letter only', () => {
@@ -24,10 +29,11 @@ describe('moods', () => {
   it('moodMix counts every mood in order', () => {
     const mix = moodMix(['sad', 'sad', 'Happy', 'lovely']);
     expect(mix.map((m) => [m.mood.id, m.count, m.percent])).toEqual([
+      ['calm', 0, 0],
       ['happy', 1, 25],
+      ['lovely', 1, 25],
       ['angry', 0, 0],
       ['sad', 2, 50],
-      ['lovely', 1, 25],
     ]);
     expect(moodMix([]).every((m) => m.percent === 0)).toBeTrue();
   });

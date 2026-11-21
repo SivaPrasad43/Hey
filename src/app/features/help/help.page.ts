@@ -10,7 +10,7 @@ import { PageHeaderComponent } from '../page-header.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex h-full min-h-0 flex-col' },
   template: `
-    <app-page-header title="Help" />
+    <app-page-header heading="Help" />
     <div class="flex-1 overflow-y-auto">
       <article class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 text-sm sm:px-6">
         <section class="bg-card ring-foreground/10 shadow-soft rounded-2xl p-6 ring-1 md:p-8">
@@ -108,6 +108,7 @@ import { PageHeaderComponent } from '../page-header.component';
 export class HelpPage {
   readonly moods = MOODS;
   readonly motions: Record<string, string> = {
+    calm: 'Settles in softly',
     happy: 'Bounces in',
     angry: 'Shakes',
     sad: 'Drifts down slowly',

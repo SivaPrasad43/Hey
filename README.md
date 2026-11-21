@@ -1,6 +1,6 @@
 # Hey
 
-A small real-time chat where every message carries a **mood** (Happy, Angry, Sad, Lovely), shown as a small colored dot.
+A small real-time chat where every message carries a **mood** (Calm, Happy, Lovely, Angry, Sad). Calm is the default.
 
 Built with Angular 21 (standalone components, signals, built-in control flow), Firebase Auth + Firestore (modular `@angular/fire` 21) and Tailwind CSS 4 with [spartan-ng](https://spartan.ng) — the shadcn/ui component set for Angular (zinc theme, Geist font). Components live in `libs/ui` and are owned by this repo; add more with `npx ng g @spartan-ng/cli:ui <name>`.
 
@@ -9,7 +9,7 @@ Built with Angular 21 (standalone components, signals, built-in control flow), F
 - Email/password sign-up and sign-in with validation, friendly errors and password reset
 - A shared **General** room that everyone joins on first sign-in
 - **Group chats** and **direct messages**, with unread dots and last-message previews
-- **Moods**: picker (click or keyboard), `Alt+H / A / S / L` shortcuts, and `?` for a shortcuts panel
+- **Moods**: picker (click or keyboard), `Alt+C / H / L / A / S` shortcuts, and `?` for a shortcuts panel
 - **Presence** (online dot, "last seen") and **typing indicators**
 - Day separators, grouping of consecutive messages, infinite scroll for older history, a jump-to-latest button with a new-message count, and optimistic sending
 - Dark mode, reduced-motion support, keyboard and screen-reader friendly controls, and a mobile layout (list → room)

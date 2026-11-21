@@ -19,7 +19,7 @@ export type MessageAction = 'reply' | 'copy' | 'edit' | 'delete';
         <!-- desktop: a menu at the cursor -->
         <div class="fixed inset-0 z-50" role="presentation" (pointerdown)="closed.emit()" (contextmenu)="$event.preventDefault(); closed.emit()"></div>
         <div
-          class="bg-popover text-popover-foreground ring-foreground/10 animate-in fade-in-0 zoom-in-95 fixed z-50 w-64 rounded-2xl p-1.5 shadow-pop ring-1 duration-100"
+          class="bg-popover text-popover-foreground ring-foreground/10 animate-in fade-in-0 zoom-in-95 fixed z-50 w-80 rounded-2xl p-1.5 shadow-pop ring-1 duration-100"
           [style.left.px]="pos().left"
           [style.top.px]="pos().top"
           role="menu"
@@ -54,7 +54,7 @@ export type MessageAction = 'reply' | 'copy' | 'edit' | 'delete';
     <ng-template #body let-m let-compact="compact">
       @if (!m.deleted) {
         <!-- react -->
-        <div class="grid grid-cols-4" [class]="compact ? 'mb-1 gap-1 border-b pb-1.5' : 'mx-4 mb-3 gap-2'" role="group" aria-label="React with a feeling">
+        <div class="grid grid-cols-5" [class]="compact ? 'mb-1 gap-1 border-b pb-1.5' : 'mx-4 mb-3 gap-2'" role="group" aria-label="React with a feeling">
           @for (mo of moods; track mo.id) {
             <button
               type="button"
@@ -143,7 +143,7 @@ export class MessageActionsSheetComponent {
   pos = computed(() => {
     const p = this.at();
     if (!p) return { left: 0, top: 0 };
-    const w = 256;
+    const w = 320;
     const rows = 2 + (this.own() ? 2 : 0);
     const h = this.msg()?.deleted ? 56 : 92 + rows * 37;
     const left = p.x + w + 8 > innerWidth ? Math.max(8, p.x - w) : p.x;

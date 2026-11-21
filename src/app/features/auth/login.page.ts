@@ -24,7 +24,7 @@ import { PasswordFieldComponent } from './password-field.component';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-auth-card title="Sign in to Hey" description="Chat that shows how you feel.">
+    <app-auth-card heading="Sign in to Hey" description="Chat that shows how you feel.">
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <hlm-field-group>
           @if (error()) {

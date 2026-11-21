@@ -25,13 +25,13 @@ import { AuthShowcaseComponent } from './auth-showcase.component';
           <section class="w-full max-w-[400px]">
             <!-- phones/tablets: same words, four feelings -->
             <app-auth-feeling-loop class="mb-8 lg:hidden" />
-            <h1 class="text-display">{{ title() }}</h1>
+            <h1 class="text-display">{{ heading() }}</h1>
             <p class="text-muted-foreground mt-2 mb-7 text-[0.95rem] lg:mb-8">{{ description() }}</p>
             <ng-content />
           </section>
         </main>
         <footer class="text-muted-foreground hidden px-10 pb-6 text-xs lg:block">
-          Messages carry a feeling: happy, angry, sad or lovely.
+          Messages carry a feeling: calm, happy, lovely, angry or sad.
         </footer>
       </div>
 
@@ -54,6 +54,7 @@ import { AuthShowcaseComponent } from './auth-showcase.component';
   `,
 })
 export class AuthCardComponent {
-  title = input('');
+  /** Page heading. Not `title`: that would also become a native tooltip on the host element. */
+  heading = input('');
   description = input('');
 }

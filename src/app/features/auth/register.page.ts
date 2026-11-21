@@ -25,7 +25,7 @@ type Field = 'name' | 'email' | 'password';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-auth-card title="Create your account" description="Pick a name, then start sharing how you feel.">
+    <app-auth-card heading="Create your account" description="Pick a name, then start sharing how you feel.">
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <hlm-field-group>
           @if (error()) {
