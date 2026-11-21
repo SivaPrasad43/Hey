@@ -1,4 +1,9 @@
 import {
+  lucideCircleCheck,
+  lucideDownload,
+  lucideMonitorSmartphone,
+  lucideShare,
+  lucideSquarePlus,
   lucideArchive,
   lucideArchiveRestore,
   lucideArrowDown,
@@ -73,4 +78,9 @@ export const APP_ICONS = {
   lucideTrash2,
   lucideUserPlus,
   lucideX,
+  lucideCircleCheck,
+  lucideDownload,
+  lucideMonitorSmartphone,
+  lucideShare,
+  lucideSquarePlus,
 };

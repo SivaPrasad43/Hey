@@ -15,6 +15,7 @@ import { Room } from '../../core/models';
 import { RoomService, otherMember, roomTitle } from '../../core/room.service';
 import { shortAgo } from '../../core/time';
 import { ToastService } from '../../core/toast.service';
+import { PwaService } from '../../core/pwa.service';
 import { UserService, isOnline } from '../../core/user.service';
 import { AvatarComponent } from '../../shared/ui/avatar.component';
 import { ChatStateService } from './chat-state.service';
@@ -280,6 +281,13 @@ interface RoomItem {
         <hlm-dropdown-menu-separator />
         <a hlmDropdownMenuItem routerLink="/chat/settings"><ng-icon name="lucideSettings" /> Settings</a>
         <a hlmDropdownMenuItem routerLink="/chat/help"><ng-icon name="lucideCircleHelp" /> Help</a>
+        @if (pwa.mode() === 'prompt') {
+          <hlm-dropdown-menu-separator />
+          <button hlmDropdownMenuItem (triggered)="pwa.install()"><ng-icon name="lucideDownload" /> Install app</button>
+        } @else if (pwa.mode() === 'ios') {
+          <hlm-dropdown-menu-separator />
+          <a hlmDropdownMenuItem routerLink="/chat/settings"><ng-icon name="lucideDownload" /> Add to Home Screen</a>
+        }
       </hlm-dropdown-menu>
     </ng-template>
   `,
@@ -307,6 +315,7 @@ export class ChatShellPage {
   private router = inject(Router);
 
   newChat = inject(NewChatService);
+  pwa = inject(PwaService);
 
   filterText = signal('');
   section = signal<Section>('chats');

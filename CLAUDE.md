@@ -45,6 +45,7 @@ Routes (`app.routes.ts`): `/login`, `/register` (guestGuard); `/chat` shell (aut
 - Mood colors are CSS vars (`--mood-*`, `--mood-*-fill`) in `styles.css`, mirrored as oklch values in `moods.ts` so specs can check contrast — **keep both in sync** when changing colors.
 - Selected mood persisted in localStorage (`hey-mood`) via `ChatStateService`.
 - Any new Firestore field/write path needs a matching `firestore.rules` change (rules use `onlyChanges([...])` allow-lists) and ideally a case in `rules-smoke.mjs`.
-- Mobile UX matters: swipe-to-reply, long-press actions sheet, haptics, PWA manifest in `public/`.
+- Mobile UX matters: swipe-to-reply, long-press actions sheet, haptics.
+- PWA: `@angular/service-worker` (`ngsw-config.json`, production builds only), `core/pwa.service.ts` (install prompt, iOS hint, update toast), manifest + icons in `public/` (maskable icons separate). SW is off in `ng serve`; test install/offline on a served `dist/` build.
 - README's feature list is partly outdated (doesn't mention replies, reactions, receipts, emotion suggestions, settings).
 - `firestore-debug.log` (~80 MB emulator log) sits in repo root; ignored by `*-debug.log`.

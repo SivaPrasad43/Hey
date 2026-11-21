@@ -1,27 +1,34 @@
 {
-  "name": "Hey",
+  "id": "/",
+  "name": "Hey — chat that shows how you feel",
   "short_name": "Hey",
-  "description": "Chat that shows how you feel.",
-  "start_url": "/chat",
+  "description": "Real-time chat where every message carries a feeling: calm, happy, lovely, angry or sad.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/chat?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#16131f",
   "theme_color": "#16131f",
+  "categories": ["social", "communication"],
   "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
     {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "name": "General room",
+      "short_name": "General",
+      "url": "/chat/general?source=pwa",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "name": "Settings",
+      "url": "/chat/settings?source=pwa",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

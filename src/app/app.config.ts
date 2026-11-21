@@ -1,4 +1,6 @@
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, inject, isDevMode, provideAppInitializer } from '@angular/core';
+import { provideServiceWorker } from '@angular/service-worker';
+import { PwaService } from './core/pwa.service';
 import { provideIcons } from '@ng-icons/core';
 import { APP_ICONS } from './core/icons';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
@@ -33,5 +35,12 @@ export const appConfig: ApplicationConfig = {
       if (environment.useEmulators) connectFirestoreEmulator(db, '127.0.0.1', 8080);
       return db;
     }),
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      // Firestore keeps the app busy, so do not wait forever for "stable".
+      registrationStrategy: 'registerWhenStable:20000',
+    }),
+    // Start listening for the install prompt before the browser fires it.
+    provideAppInitializer(() => void inject(PwaService)),
   ],
 };

@@ -15,6 +15,7 @@ import { AuthService, authErrorMessage } from '../../core/auth.service';
 import { DEFAULT_MOOD, MOODS, MoodId, getMood } from '../../core/moods';
 import { ThemeMode, ThemeService } from '../../core/theme.service';
 import { ToastService } from '../../core/toast.service';
+import { PwaService } from '../../core/pwa.service';
 import { AVATAR_COLORS, UserService, colorFor } from '../../core/user.service';
 import { AvatarComponent } from '../../shared/ui/avatar.component';
 import { ChatStateService } from '../chat/chat-state.service';
@@ -158,6 +159,45 @@ import { PageHeaderComponent } from '../page-header.component';
 
         <section class="bg-card ring-foreground/10 shadow-soft grid gap-6 rounded-2xl p-6 ring-1 md:grid-cols-[200px_1fr] md:p-8">
           <div>
+            <h2 class="text-base font-bold tracking-tight">App</h2>
+            <p class="text-muted-foreground mt-1 text-sm">Use Hey like an app on your phone or computer.</p>
+          </div>
+          <div class="flex items-start gap-4">
+            <img src="icons/icon-192.png" alt="" class="size-14 shrink-0 rounded-2xl shadow-soft" />
+            <div class="flex min-w-0 flex-col gap-3">
+              @switch (pwa.mode()) {
+                @case ('installed') {
+                  <p class="flex items-center gap-2 text-sm font-semibold">
+                    <ng-icon name="lucideCircleCheck" class="text-mood-calm" /> You're using the installed app.
+                  </p>
+                }
+                @case ('prompt') {
+                  <p class="text-sm">
+                    Install Hey for its own window, a home-screen icon and quicker start-up. It keeps working when your connection drops.
+                  </p>
+                  <button hlmBtn type="button" class="w-fit" (click)="install()"><ng-icon name="lucideDownload" /> Install Hey</button>
+                }
+                @case ('ios') {
+                  <p class="text-sm">Add Hey to your Home Screen to open it like an app:</p>
+                  <ol class="text-muted-foreground flex flex-col gap-1.5 text-sm">
+                    <li class="flex items-center gap-2">1. Tap <ng-icon name="lucideShare" class="text-foreground" /> <span class="text-foreground font-semibold">Share</span> in Safari.</li>
+                    <li class="flex items-center gap-2">2. Choose <ng-icon name="lucideSquarePlus" class="text-foreground" /> <span class="text-foreground font-semibold">Add to Home Screen</span>.</li>
+                  </ol>
+                }
+                @default {
+                  <p class="text-muted-foreground text-sm">
+                    <ng-icon name="lucideMonitorSmartphone" class="text-foreground mr-1 align-[-2px]" />
+                    Open Hey in Chrome, Edge or Safari, then use the browser's <span class="text-foreground font-semibold">Install</span>
+                    or <span class="text-foreground font-semibold">Add to Home Screen</span> option.
+                  </p>
+                }
+              }
+            </div>
+          </div>
+        </section>
+
+        <section class="bg-card ring-foreground/10 shadow-soft grid gap-6 rounded-2xl p-6 ring-1 md:grid-cols-[200px_1fr] md:p-8">
+          <div>
             <h2 class="text-base font-bold tracking-tight">Account</h2>
             <p class="text-muted-foreground mt-1 text-sm">Password and session.</p>
           </div>
@@ -176,6 +216,11 @@ export class SettingsPage {
   private users = inject(UserService);
   private toast = inject(ToastService);
   private state = inject(ChatStateService);
+  pwa = inject(PwaService);
+
+  async install(): Promise<void> {
+    await this.pwa.install();
+  }
 
   readonly colors = AVATAR_COLORS;
   readonly moods = MOODS;
