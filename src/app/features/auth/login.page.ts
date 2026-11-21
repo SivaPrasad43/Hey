@@ -24,16 +24,16 @@ import { PasswordFieldComponent } from './password-field.component';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-auth-card title="Sign in" description="Enter your email and password to continue.">
+    <app-auth-card title="Sign in to Hey" description="Chat that shows how you feel.">
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <hlm-field-group>
           @if (error()) {
-            <p class="border-destructive/30 bg-destructive/5 text-destructive rounded-md border px-3 py-2 text-sm" role="alert">
+            <p class="bg-destructive/10 text-destructive rounded-xl px-4 py-3 text-sm font-medium" role="alert">
               {{ error() }}
             </p>
           }
           <hlm-field>
-            <label hlmFieldLabel for="email">Email</label>
+            <label hlmFieldLabel class="font-semibold" for="email">Email</label>
             <input
               hlmInput
               id="email"
@@ -50,7 +50,7 @@ import { PasswordFieldComponent } from './password-field.component';
           </hlm-field>
           <hlm-field>
             <div class="flex items-center">
-              <label hlmFieldLabel for="password">Password</label>
+              <label hlmFieldLabel class="font-semibold" for="password">Password</label>
               <button type="button" class="text-muted-foreground hover:text-foreground ml-auto text-sm underline-offset-4 hover:underline" (click)="forgot()">
                 Forgot password?
               </button>
@@ -65,15 +65,15 @@ import { PasswordFieldComponent } from './password-field.component';
             }
           </hlm-field>
           <hlm-field>
-            <button hlmBtn type="submit" class="w-full" [disabled]="busy()">
+            <button hlmBtn size="lg" type="submit" class="mt-2 w-full" [disabled]="busy()">
               @if (busy()) {
                 <hlm-spinner />
               }
               Sign in
             </button>
-            <p class="text-muted-foreground text-center text-sm">
+            <p class="text-muted-foreground mt-2 text-center text-sm">
               Don’t have an account?
-              <a routerLink="/register" class="text-foreground underline underline-offset-4">Sign up</a>
+              <a routerLink="/register" class="text-foreground font-semibold underline underline-offset-4">Sign up</a>
             </p>
           </hlm-field>
         </hlm-field-group>

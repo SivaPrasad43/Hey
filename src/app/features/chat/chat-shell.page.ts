@@ -7,7 +7,7 @@ import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
 import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
 import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { ThemeMode, ThemeService } from '../../core/theme.service';
-import { MoodDotComponent } from '../../shared/ui/mood-dot.component';
+import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import { catchError, filter, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { Room } from '../../core/models';
@@ -48,39 +48,39 @@ interface RoomItem {
     HlmInputGroupImports,
     HlmSkeletonImports,
     AvatarComponent,
-    MoodDotComponent,
+    EmotionFaceComponent,
   ],
     changeDetection: ChangeDetectionStrategy.OnPush,
       template: `
     <div class="flex h-svh">
       <aside
-        class="bg-sidebar text-sidebar-foreground border-sidebar-border flex w-full min-w-0 flex-col md:w-64 md:shrink-0 md:border-r"
+        class="bg-sidebar text-sidebar-foreground border-sidebar-border flex w-full min-w-0 flex-col md:w-72 md:shrink-0 md:border-r"
         [class.max-md:hidden]="!atRoot()"
         aria-label="Chats"
       >
-        <div class="flex h-14 shrink-0 items-center gap-2 px-4 pt-[env(safe-area-inset-top)]">
-          <span class="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md text-xs font-semibold">H</span>
-          <span class="text-sm font-semibold">Hey</span>
+        <div class="flex h-16 shrink-0 items-center gap-2 px-5 pt-[env(safe-area-inset-top)]">
+          <span class="bg-primary text-primary-foreground flex size-7 items-center justify-center rounded-full text-xs font-bold">H</span>
+          <span class="text-base font-bold tracking-tight">Hey</span>
         </div>
 
-        <div class="flex flex-col gap-2 px-3">
-          <button hlmBtn variant="outline" size="sm" class="w-full justify-start" (click)="newChat.open('dm')">
+        <div class="flex flex-col gap-3 px-4">
+          <button hlmBtn class="w-full" (click)="newChat.open('dm')">
             <ng-icon name="lucidePlus" />
             New chat
           </button>
-          <hlm-input-group class="h-8">
+          <hlm-input-group class="rounded-full">
             <hlm-input-group-addon><ng-icon name="lucideSearch" /></hlm-input-group-addon>
             <input hlmInputGroupInput placeholder="Search" aria-label="Search chats" autocomplete="off"
               [value]="filterText()" (input)="filterText.set($any($event.target).value)" />
           </hlm-input-group>
         </div>
 
-        <nav class="mt-4 flex flex-col gap-0.5 px-3" aria-label="Sections">
+        <nav class="mt-5 flex flex-col gap-1 px-4" aria-label="Sections">
           @for (s of sections; track s.id) {
             <button
               type="button"
-              class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex h-8 items-center gap-2 rounded-md px-2 text-sm transition-colors"
-              [class]="section() === s.id ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : ''"
+              class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex h-10 items-center gap-3 rounded-full px-4 text-sm font-medium transition-colors"
+              [class]="section() === s.id ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold' : 'text-muted-foreground'"
               [attr.aria-pressed]="section() === s.id"
               (click)="setSection(s.id)"
             >
@@ -95,8 +95,8 @@ interface RoomItem {
         </nav>
 
         <div class="mt-4 flex min-h-0 flex-1 flex-col">
-          <p class="text-muted-foreground px-5 pb-1 text-xs font-medium">{{ sectionLabel() }}</p>
-          <div class="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+          <p class="text-muted-foreground px-8 pb-2 text-xs font-semibold tracking-wide uppercase">{{ sectionLabel() }}</p>
+          <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-3">
             @if (!roomsLoaded()) {
               @for (i of [1, 2, 3, 4]; track i) {
                 <div class="flex items-center gap-2 px-2 py-2" aria-hidden="true">
@@ -105,19 +105,19 @@ interface RoomItem {
                 </div>
               }
             } @else {
-              <ul class="flex flex-col gap-0.5">
+              <ul class="flex flex-col gap-1">
                 @for (item of visibleItems(); track item.room.id) {
                   <li class="group/item relative">
                     <a
                       [routerLink]="['/chat', item.room.id]"
-                      class="hover:bg-sidebar-accent flex items-start gap-2 rounded-md px-2 py-1.5 pr-8 transition-colors"
+                      class="hover:bg-sidebar-accent flex items-start gap-3 rounded-xl px-3 py-2.5 pr-9 transition-colors"
                       [class]="item.room.id === state.activeRoomId() ? 'bg-sidebar-accent' : ''"
                       [attr.aria-current]="item.room.id === state.activeRoomId() ? 'page' : null"
                     >
                       @if (item.room.type === 'dm') {
                         <app-avatar class="mt-0.5" size="sm" [name]="item.title" [uid]="item.peerId ?? ''" [color]="item.peerColor" [online]="item.peerOnline" />
                       } @else {
-                        <span class="bg-muted text-muted-foreground mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md">
+                        <span class="bg-muted text-muted-foreground mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full">
                           <ng-icon name="lucideHash" size="14" />
                         </span>
                       }
@@ -131,7 +131,7 @@ interface RoomItem {
                         </span>
                         <span class="flex items-center gap-1.5">
                           @if (item.mood) {
-                            <app-mood-dot [value]="item.mood" />
+                            <app-emotion-face [emotion]="item.mood" [size]="13" />
                           }
                           <span class="truncate text-xs" [class]="item.unread ? 'text-foreground' : 'text-muted-foreground'">{{ item.preview }}</span>
                           @if (item.unread) {
@@ -145,7 +145,7 @@ interface RoomItem {
                       hlmBtn
                       variant="ghost"
                       size="icon-xs"
-                      class="absolute top-1.5 right-1.5 opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 [@media(hover:none)]:opacity-100"
+                      class="absolute top-2.5 right-2 opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 [@media(hover:none)]:opacity-100"
                       [hlmDropdownMenuTrigger]="roomMenu"
                       [hlmDropdownMenuTriggerData]="{ $implicit: item }"
                       align="end"
@@ -159,7 +159,7 @@ interface RoomItem {
                 }
               </ul>
               @if (items().length > visibleItems().length) {
-                <button hlmBtn variant="ghost" size="sm" class="text-muted-foreground mt-1 w-full justify-start" (click)="limit.set(limit() + PAGE)">
+                <button hlmBtn variant="ghost" size="sm" class="text-muted-foreground mt-2 w-full" (click)="limit.set(limit() + PAGE)">
                   Show more
                 </button>
               }
@@ -167,16 +167,16 @@ interface RoomItem {
           </div>
         </div>
 
-        <div class="border-sidebar-border flex flex-col gap-0.5 border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <a routerLink="/chat/settings" routerLinkActive="bg-sidebar-accent font-medium" class="hover:bg-sidebar-accent flex h-8 items-center gap-2 rounded-md px-2 text-sm">
+        <div class="border-sidebar-border flex flex-col gap-1 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <a routerLink="/chat/settings" routerLinkActive="bg-sidebar-accent !text-foreground font-semibold" class="hover:bg-sidebar-accent text-muted-foreground flex h-10 items-center gap-3 rounded-full px-4 text-sm font-medium">
             <ng-icon name="lucideSettings" class="text-muted-foreground" /> Settings
           </a>
-          <a routerLink="/chat/help" routerLinkActive="bg-sidebar-accent font-medium" class="hover:bg-sidebar-accent flex h-8 items-center gap-2 rounded-md px-2 text-sm">
+          <a routerLink="/chat/help" routerLinkActive="bg-sidebar-accent !text-foreground font-semibold" class="hover:bg-sidebar-accent text-muted-foreground flex h-10 items-center gap-3 rounded-full px-4 text-sm font-medium">
             <ng-icon name="lucideCircleHelp" class="text-muted-foreground" /> Help
           </a>
           <button
             type="button"
-            class="hover:bg-sidebar-accent aria-expanded:bg-sidebar-accent mt-1 flex items-center gap-2 rounded-md p-2 text-left"
+            class="hover:bg-sidebar-accent aria-expanded:bg-sidebar-accent mt-2 flex items-center gap-3 rounded-full p-1.5 pr-3 text-left"
             [hlmDropdownMenuTrigger]="userMenu"
             side="top"
             align="start"
@@ -184,7 +184,7 @@ interface RoomItem {
           >
             <app-avatar [name]="auth.displayName()" [uid]="auth.uid() ?? ''" [color]="me()?.avatarColor" />
             <span class="min-w-0 flex-1 leading-tight">
-              <span class="block truncate text-sm font-medium">{{ auth.displayName() }}</span>
+              <span class="block truncate text-sm font-semibold">{{ auth.displayName() }}</span>
               <span class="text-muted-foreground block truncate text-xs">{{ me()?.email }}</span>
             </span>
             <ng-icon name="lucideChevronsUpDown" class="text-muted-foreground" />

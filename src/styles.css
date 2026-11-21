@@ -14,23 +14,34 @@
   --color-mood-angry: var(--mood-angry);
   --color-mood-sad: var(--mood-sad);
   --color-mood-lovely: var(--mood-lovely);
+  /* Dribbble-style soft, diffuse elevation */
+  --shadow-soft: 0 1px 3px var(--shadow-color-soft), 0 1px 2px -1px var(--shadow-color-soft);
+  --shadow-float: 0 12px 32px -8px var(--shadow-color-float), 0 2px 6px -1px var(--shadow-color-soft);
+  --shadow-pop: 0 24px 60px -12px var(--shadow-color-pop), 0 4px 12px -4px var(--shadow-color-soft);
 }
 
 :root {
 color-scheme: light;
 
-/* Mood accents: used only as small dots and thin markers. */
---mood-happy: oklch(0.769 0.188 70.08);
---mood-angry: oklch(0.637 0.237 25.331);
---mood-sad: oklch(0.623 0.214 259.815);
---mood-lovely: oklch(0.656 0.241 354.308);
+/* Feelings: one family, matched lightness, slightly softened chroma. */
+--mood-happy: oklch(0.75 0.16 68);
+--mood-angry: oklch(0.63 0.2 25);
+--mood-sad: oklch(0.63 0.17 255);
+--mood-lovely: oklch(0.65 0.2 352);
+--mood-happy-ring: oklch(0.75 0.16 68 / 0.22);
+--mood-angry-ring: oklch(0.63 0.2 25 / 0.2);
+--mood-sad-ring: oklch(0.63 0.17 255 / 0.2);
+--mood-lovely-ring: oklch(0.65 0.2 352 / 0.2);
+--shadow-color-soft: oklch(0.2 0.03 280 / 0.08);
+--shadow-color-float: oklch(0.2 0.03 280 / 0.16);
+--shadow-color-pop: oklch(0.2 0.03 280 / 0.22);
 
 --chart-1: oklch(0.646 0.222 41.116);
 --chart-2: oklch(0.6 0.118 184.704);
 --chart-3: oklch(0.398 0.07 227.392);
 --chart-4: oklch(0.828 0.189 84.429);
 --chart-5: oklch(0.769 0.188 70.08);
---radius: 0.625rem;
+--radius: 0.75rem;
 --background: oklch(1 0 0);
 --foreground: oklch(0.141 0.005 285.823);
 --card: oklch(1 0 0);
@@ -49,7 +60,7 @@ color-scheme: light;
 --border: oklch(0.92 0.004 286.32);
 --input: oklch(0.92 0.004 286.32);
 --ring: oklch(0.705 0.015 286.067);
---sidebar: oklch(0.985 0 0);
+--sidebar: oklch(1 0 0);
 --sidebar-foreground: oklch(0.141 0.005 285.823);
 --sidebar-primary: oklch(0.21 0.006 285.885);
 --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -61,42 +72,50 @@ color-scheme: light;
 
 :root.dark {
 color-scheme: dark;
---mood-happy: oklch(0.828 0.189 84.429);
---mood-angry: oklch(0.704 0.191 22.216);
---mood-sad: oklch(0.707 0.165 254.624);
---mood-lovely: oklch(0.718 0.202 349.761);
+/* Ink: deep blue-black surfaces (hue ~280) */
+--mood-happy: oklch(0.8 0.15 75);
+--mood-angry: oklch(0.7 0.17 22);
+--mood-sad: oklch(0.72 0.14 252);
+--mood-lovely: oklch(0.72 0.17 350);
+--mood-happy-ring: oklch(0.8 0.15 75 / 0.25);
+--mood-angry-ring: oklch(0.7 0.17 22 / 0.25);
+--mood-sad-ring: oklch(0.72 0.14 252 / 0.25);
+--mood-lovely-ring: oklch(0.72 0.17 350 / 0.25);
+--shadow-color-soft: oklch(0 0 0 / 0.3);
+--shadow-color-float: oklch(0 0 0 / 0.45);
+--shadow-color-pop: oklch(0 0 0 / 0.6);
 
 --chart-1: oklch(0.488 0.243 264.376);
 --chart-2: oklch(0.696 0.17 162.48);
 --chart-3: oklch(0.769 0.188 70.08);
 --chart-4: oklch(0.627 0.265 303.9);
 --chart-5: oklch(0.645 0.246 16.439);
---background: oklch(0.141 0.005 285.823);
---foreground: oklch(0.985 0 0);
---card: oklch(0.21 0.006 285.885);
---card-foreground: oklch(0.985 0 0);
---popover: oklch(0.21 0.006 285.885);
---popover-foreground: oklch(0.985 0 0);
---primary: oklch(0.92 0.004 286.32);
---primary-foreground: oklch(0.21 0.006 285.885);
---secondary: oklch(0.274 0.006 286.033);
---secondary-foreground: oklch(0.985 0 0);
---muted: oklch(0.274 0.006 286.033);
---muted-foreground: oklch(0.705 0.015 286.067);
---accent: oklch(0.274 0.006 286.033);
---accent-foreground: oklch(0.985 0 0);
---destructive: oklch(0.704 0.191 22.216);
---border: oklch(1 0 0 / 10%);
---input: oklch(1 0 0 / 15%);
---ring: oklch(0.552 0.016 285.938);
---sidebar: oklch(0.21 0.006 285.885);
---sidebar-foreground: oklch(0.985 0 0);
---sidebar-primary: oklch(0.985 0 0);
---sidebar-primary-foreground: oklch(0.21 0.006 285.885);
---sidebar-accent: oklch(0.274 0.006 286.033);
---sidebar-accent-foreground: oklch(0.985 0 0);
---sidebar-border: oklch(1 0 0 / 10%);
---sidebar-ring: oklch(0.552 0.016 285.938);
+--background: oklch(0.16 0.02 280);
+--foreground: oklch(0.97 0.005 280);
+--card: oklch(0.2 0.025 280);
+--card-foreground: oklch(0.97 0.005 280);
+--popover: oklch(0.21 0.025 280);
+--popover-foreground: oklch(0.97 0.005 280);
+--primary: oklch(0.96 0.005 280);
+--primary-foreground: oklch(0.18 0.02 280);
+--secondary: oklch(0.26 0.022 280);
+--secondary-foreground: oklch(0.97 0.005 280);
+--muted: oklch(0.24 0.022 280);
+--muted-foreground: oklch(0.72 0.02 280);
+--accent: oklch(0.27 0.024 280);
+--accent-foreground: oklch(0.97 0.005 280);
+--destructive: oklch(0.7 0.17 22);
+--border: oklch(1 0 0 / 8%);
+--input: oklch(1 0 0 / 12%);
+--ring: oklch(0.6 0.03 280);
+--sidebar: oklch(0.18 0.022 280);
+--sidebar-foreground: oklch(0.97 0.005 280);
+--sidebar-primary: oklch(0.96 0.005 280);
+--sidebar-primary-foreground: oklch(0.18 0.02 280);
+--sidebar-accent: oklch(0.25 0.022 280);
+--sidebar-accent-foreground: oklch(0.97 0.005 280);
+--sidebar-border: oklch(1 0 0 / 8%);
+--sidebar-ring: oklch(0.6 0.03 280);
 }
 
 @layer base {
@@ -118,4 +137,111 @@ body {
     -webkit-font-smoothing: antialiased;
     font-feature-settings: "ss01", "cv11";
   }
+  h1, h2, h3 {
+    letter-spacing: -0.015em;
+  }
+}
+
+@layer components {
+  /* Dribbble-style heading scale */
+  .text-display {
+    font-size: 1.75rem;
+    line-height: 2.125rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+  .text-title {
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+}
+
+/* ---------- Emotion motion ---------- */
+/* Message lines: plays once when a message arrives live. */
+@keyframes emo-in-happy {
+  0% { opacity: 0; transform: translateY(6px) scale(0.97); }
+  55% { opacity: 1; transform: translateY(-2px) scale(1.01); }
+  80% { transform: translateY(1px) scale(1); }
+  100% { transform: none; }
+}
+@keyframes emo-in-angry {
+  0% { opacity: 0; transform: translateX(0); }
+  15% { opacity: 1; transform: translateX(-4px); }
+  30% { transform: translateX(4px); }
+  45% { transform: translateX(-3px); }
+  60% { transform: translateX(3px); }
+  75% { transform: translateX(-1px); }
+  100% { transform: none; }
+}
+@keyframes emo-in-sad {
+  0% { opacity: 0; transform: translateY(-6px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes emo-in-lovely {
+  0% { opacity: 0; transform: scale(0.97); }
+  25% { opacity: 1; transform: scale(1.015); }
+  45% { transform: scale(1); }
+  65% { transform: scale(1.01); }
+  100% { transform: none; }
+}
+.emo-in-happy { animation: emo-in-happy 520ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.emo-in-angry { animation: emo-in-angry 480ms ease-out both; }
+.emo-in-sad { animation: emo-in-sad 900ms ease-out both; }
+.emo-in-lovely { animation: emo-in-lovely 900ms ease-in-out both; }
+
+/* Faces: parts animate while the face has .playing */
+.emo-face svg,
+.emo-face svg * { transform-box: fill-box; transform-origin: center; }
+@keyframes face-blink { 0%, 100% { transform: scaleY(1); } 40% { transform: scaleY(0.1); } }
+@keyframes face-grin { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18, 1.25); } }
+@keyframes face-shake { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-9deg); } 40% { transform: rotate(8deg); } 60% { transform: rotate(-6deg); } 80% { transform: rotate(4deg); } }
+@keyframes face-brows { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(1.2px); } }
+@keyframes face-tear { 0% { opacity: 0; transform: translateY(-2px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(5px); } }
+@keyframes face-beat { 0%, 100% { transform: scale(1); } 25% { transform: scale(1.35); } 45% { transform: scale(1); } 65% { transform: scale(1.25); } }
+.emo-face.playing.face-happy .f-eyes { animation: face-blink 420ms ease-in-out; }
+.emo-face.playing.face-happy .f-mouth { animation: face-grin 560ms ease-in-out; }
+.emo-face.playing.face-angry svg { animation: face-shake 480ms ease-in-out; transform-origin: 50% 50%; }
+.emo-face.playing.face-angry .f-brows { animation: face-brows 480ms ease-in-out; }
+.emo-face.playing.face-sad .f-tear { animation: face-tear 1100ms ease-in; }
+.emo-face.face-sad .f-tear { opacity: 0; }
+.emo-face.playing.face-lovely .f-eyes > * { animation: face-beat 900ms ease-in-out; }
+
+/* Reaction burst particles */
+@keyframes emo-burst {
+  0% { opacity: 0; transform: translate(-50%, 0) scale(0.4) rotate(0); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), var(--dy)) scale(1) rotate(var(--rot)); }
+}
+.emo-particle { animation: emo-burst 760ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+@keyframes emo-count { 0% { transform: translateY(0); } 40% { transform: translateY(-3px); } 100% { transform: none; } }
+.emo-count-bump { animation: emo-count 320ms ease-out; }
+
+/* Briefly mark a message reached from the timeline */
+@keyframes emo-flash { 0%, 100% { box-shadow: none; } 30% { box-shadow: 0 0 0 2px var(--ring); } }
+.emo-flash { animation: emo-flash 1200ms ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .emo-in-happy, .emo-in-angry, .emo-in-sad, .emo-in-lovely { animation: emo-in-sad 200ms ease-out both; }
+  .emo-face.playing *, .emo-face.playing svg { animation: none !important; }
+  .emo-particle { display: none; }
+  .emo-count-bump, .emo-flash { animation: none; }
+}
+
+/* Composer: white surface, visible hairline border at rest, feeling-colored border + ring on focus.
+   Unlayered on purpose so it wins over the input-group utilities; no color-mix() so every browser renders it. */
+.composer-box {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.composer-box:hover {
+  border-color: var(--ring);
+}
+.composer-box:focus-within {
+  background-color: var(--background);
+  border-color: var(--composer-accent, var(--ring));
+  box-shadow: 0 0 0 3px var(--composer-ring, transparent), var(--shadow-soft);
 }

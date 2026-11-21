@@ -10,6 +10,7 @@ import {
   signal,
   untracked,
   viewChild,
+  WritableSignal,
 } from '@angular/core';
 import { NgIcon } from '@ng-icons/core';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
@@ -17,14 +18,24 @@ import { HlmEmptyImports } from '@spartan-ng/helm/empty';
 import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmSpinnerImports } from '@spartan-ng/helm/spinner';
 import { EditEvent, MessageGroupComponent, ReactEvent } from './message-group.component';
-import { DisplayMessage, buildRows } from './message-rows';
+import { MoodId } from '../../core/moods';
+import { EmotionTimelineComponent } from './emotion-timeline.component';
+import {
+  DisplayMessage,
+  ReactionCounts,
+  buildRows,
+  countReactions,
+  matchesFilter,
+  newArrivals,
+  reactionIncreases,
+} from './message-rows';
 
 const NEAR_BOTTOM_PX = 120;
 const LOAD_MORE_PX = 150;
 
 @Component({
     selector: 'app-message-list',
-    imports: [MessageGroupComponent, NgIcon, HlmButtonImports, HlmEmptyImports, HlmSkeletonImports, HlmSpinnerImports],
+    imports: [MessageGroupComponent, EmotionTimelineComponent, NgIcon, HlmButtonImports, HlmEmptyImports, HlmSkeletonImports, HlmSpinnerImports],
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'relative flex min-h-0 flex-1 flex-col' },
     template: `
@@ -62,8 +73,13 @@ const LOAD_MORE_PX = 150;
           @if (!rows().length) {
             <hlm-empty class="mt-16">
               <hlm-empty-header>
-                <h2 hlmEmptyTitle>No messages yet</h2>
-                <p hlmEmptyDescription>Messages you send here appear for everyone in this conversation.</p>
+                @if (filter()) {
+                  <h2 hlmEmptyTitle>No {{ filterLabel() }} messages loaded</h2>
+                  <p hlmEmptyDescription>Scroll up to load older history, or clear the filter.</p>
+                } @else {
+                  <h2 hlmEmptyTitle>No messages yet</h2>
+                  <p hlmEmptyDescription>Pick how you feel below and say something.</p>
+                }
               </hlm-empty-header>
             </hlm-empty>
           }
@@ -71,10 +87,8 @@ const LOAD_MORE_PX = 150;
           @for (row of rows(); track row.key) {
             @switch (row.kind) {
               @case ('day') {
-                <div class="my-4 flex items-center gap-3" role="separator" [attr.aria-label]="row.label">
-                  <span class="bg-border h-px flex-1"></span>
-                  <span class="text-muted-foreground text-xs font-medium">{{ row.label }}</span>
-                  <span class="bg-border h-px flex-1"></span>
+                <div class="my-5 flex items-center justify-center" role="separator" [attr.aria-label]="row.label">
+                  <span class="bg-muted text-muted-foreground rounded-full px-3 py-1 text-xs font-semibold">{{ row.label }}</span>
                 </div>
               }
               @case ('system') {
@@ -85,6 +99,8 @@ const LOAD_MORE_PX = 150;
                   [run]="row"
                   [meUid]="meUid()"
                   [color]="colors()[row.senderId]"
+                  [fresh]="fresh()"
+                  [bumps]="bumps()"
                   (react)="react.emit($event)"
                   (edit)="edit.emit($event)"
                   (remove)="remove.emit($event)"
@@ -96,12 +112,20 @@ const LOAD_MORE_PX = 150;
       </div>
     </div>
 
+    @if (!loading()) {
+      <app-emotion-timeline
+        class="absolute top-3 right-3 bottom-3 hidden md:block"
+        [messages]="visible()"
+        (jump)="jumpTo($event)"
+      />
+    }
+
     @if (showJump()) {
       <button
         hlmBtn
         variant="outline"
         size="sm"
-        class="bg-background absolute bottom-3 left-1/2 -translate-x-1/2 shadow-sm"
+        class="bg-background shadow-float absolute bottom-3 left-1/2 -translate-x-1/2"
         (click)="scrollToBottom(true)"
         [attr.aria-label]="newCount() ? newCount() + ' new messages. Jump to latest' : 'Jump to latest'"
       >
@@ -124,8 +148,20 @@ export class MessageListComponent implements AfterViewChecked {
   edit = output<EditEvent>();
   remove = output<DisplayMessage>();
 
+  /** Show only messages of this emotion. */
+  filter = input<MoodId | null>(null);
+
   readonly skeleton = [60, 40, 75, 50];
-  rows = computed(() => buildRows(this.messages(), this.meUid()));
+  rows = computed(() => buildRows(this.messages(), this.meUid(), new Date(), this.filter()));
+  visible = computed(() => this.messages().filter((m) => matchesFilter(m, this.filter())));
+  filterLabel = computed(() => this.filter() ?? '');
+
+  /** Messages that just arrived live (their entrance motion plays once). */
+  fresh = signal<ReadonlySet<string>>(new Set());
+  /** Reaction counts that just went up. */
+  bumps = signal<ReadonlySet<string>>(new Set());
+  private seenIds: Set<string> | null = null;
+  private seenReactions: ReactionCounts | null = null;
 
   private scroller = viewChild<ElementRef<HTMLElement>>('scroller');
   private atBottom = signal(true);
@@ -189,6 +225,8 @@ export class MessageListComponent implements AfterViewChecked {
 
   private onMessagesChanged(msgs: DisplayMessage[], loading: boolean): void {
     if (loading) {
+      this.seenIds = null;
+      this.seenReactions = null;
       this.prevFirstId = this.prevLastId = null;
       this.pendingScroll = { kind: 'bottom', smooth: false };
       this.atBottom.set(true);
@@ -198,6 +236,12 @@ export class MessageListComponent implements AfterViewChecked {
     const first = msgs[0]?.id ?? null;
     const last = msgs[msgs.length - 1];
     const el = this.scroller()?.nativeElement;
+
+    this.markFresh(newArrivals(this.seenIds, msgs), this.fresh);
+    const counts = countReactions(msgs);
+    this.markFresh(reactionIncreases(this.seenReactions, counts), this.bumps);
+    this.seenIds = new Set(msgs.map((m) => m.id));
+    this.seenReactions = counts;
 
     if (this.prevLastId === null) {
       this.pendingScroll = { kind: 'bottom', smooth: false };
@@ -215,5 +259,23 @@ export class MessageListComponent implements AfterViewChecked {
     this.prevFirstId = first;
     this.prevLastId = last?.id ?? null;
     if (this.pendingScroll) setTimeout(() => this.applyPendingScroll());
+  }
+
+  /** Add keys to a short-lived set (cleared after the motion has played). */
+  private markFresh(keys: string[], target: WritableSignal<ReadonlySet<string>>): void {
+    if (!keys.length) return;
+    target.update((s) => new Set([...s, ...keys]));
+    setTimeout(() => target.update((s) => new Set([...s].filter((k) => !keys.includes(k)))), 1500);
+  }
+
+  /** Scroll a message into view and flash it (from the timeline). */
+  jumpTo(id: string): void {
+    const el = this.scroller()?.nativeElement.querySelector(`[data-mid="${CSS.escape(id)}"]`) as HTMLElement | null;
+    if (!el) return;
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    el.classList.remove('emo-flash');
+    void el.offsetWidth;
+    el.classList.add('emo-flash');
+    setTimeout(() => el.classList.remove('emo-flash'), 1300);
   }
 }

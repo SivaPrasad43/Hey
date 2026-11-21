@@ -7,8 +7,10 @@ import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmLabelImports } from '@spartan-ng/helm/label';
 import { HlmRadioGroupImports } from '@spartan-ng/helm/radio-group';
-import { HlmSeparatorImports } from '@spartan-ng/helm/separator';
 import { HlmSpinnerImports } from '@spartan-ng/helm/spinner';
+import { HlmSwitchImports } from '@spartan-ng/helm/switch';
+import { hapticsEnabled, hapticsSupported, setHapticsEnabled, vibrate } from '../../core/haptics';
+import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import { AuthService, authErrorMessage } from '../../core/auth.service';
 import { MOODS, MoodId, getMood } from '../../core/moods';
 import { ThemeMode, ThemeService } from '../../core/theme.service';
@@ -28,9 +30,10 @@ import { PageHeaderComponent } from '../page-header.component';
     HlmInputImports,
     HlmLabelImports,
     HlmRadioGroupImports,
-    HlmSeparatorImports,
-    HlmSpinnerImports,
+        HlmSpinnerImports,
+    HlmSwitchImports,
     AvatarComponent,
+    EmotionFaceComponent,
     PageHeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,15 +41,15 @@ import { PageHeaderComponent } from '../page-header.component';
   template: `
     <app-page-header title="Settings" />
     <div class="flex-1 overflow-y-auto">
-      <form class="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-8 sm:px-6" [formGroup]="form" (ngSubmit)="save()" novalidate>
-        <section class="grid gap-6 md:grid-cols-[200px_1fr]">
+      <form class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6" [formGroup]="form" (ngSubmit)="save()" novalidate>
+        <section class="bg-card ring-foreground/10 shadow-soft grid gap-6 rounded-2xl p-6 ring-1 md:grid-cols-[200px_1fr] md:p-8">
           <div>
-            <h2 class="text-sm font-medium">Profile</h2>
+            <h2 class="text-base font-bold tracking-tight">Profile</h2>
             <p class="text-muted-foreground mt-1 text-sm">How others see you.</p>
           </div>
           <hlm-field-group>
             <hlm-field>
-              <label hlmFieldLabel for="displayName">Display name</label>
+              <label hlmFieldLabel class="font-semibold" for="displayName">Display name</label>
               <input
                 hlmInput
                 id="displayName"
@@ -61,7 +64,7 @@ import { PageHeaderComponent } from '../page-header.component';
               }
             </hlm-field>
             <hlm-field>
-              <span hlmFieldLabel id="color-label">Avatar color</span>
+              <span hlmFieldLabel class="font-semibold" id="color-label">Avatar color</span>
               <div class="flex items-center gap-4">
                 <app-avatar size="lg" [name]="form.controls.displayName.value || auth.displayName()" [color]="form.controls.avatarColor.value" />
                 <div class="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="color-label">
@@ -69,7 +72,7 @@ import { PageHeaderComponent } from '../page-header.component';
                     <button
                       type="button"
                       role="radio"
-                      class="ring-offset-background focus-visible:ring-ring flex size-6 items-center justify-center rounded-full text-white ring-offset-2 outline-none focus-visible:ring-2 aria-checked:ring-2 aria-checked:ring-foreground"
+                      class="ring-offset-background focus-visible:ring-ring flex size-8 items-center justify-center rounded-full text-white ring-offset-2 outline-none focus-visible:ring-2 aria-checked:ring-2 aria-checked:ring-foreground"
                       [style.background]="c"
                       [attr.aria-checked]="form.controls.avatarColor.value === c"
                       [attr.aria-label]="'Color ' + c"
@@ -84,28 +87,26 @@ import { PageHeaderComponent } from '../page-header.component';
               </div>
             </hlm-field>
             <hlm-field>
-              <label hlmFieldLabel for="email">Email</label>
+              <label hlmFieldLabel class="font-semibold" for="email">Email</label>
               <input hlmInput id="email" [value]="me()?.email ?? ''" disabled />
             </hlm-field>
           </hlm-field-group>
         </section>
 
-        <hlm-separator />
-
-        <section class="grid gap-6 md:grid-cols-[200px_1fr]">
+        <section class="bg-card ring-foreground/10 shadow-soft grid gap-6 rounded-2xl p-6 ring-1 md:grid-cols-[200px_1fr] md:p-8">
           <div>
-            <h2 class="text-sm font-medium">Chat</h2>
-            <p class="text-muted-foreground mt-1 text-sm">Defaults for new messages.</p>
+            <h2 class="text-base font-bold tracking-tight">Chat</h2>
+            <p class="text-muted-foreground mt-1 text-sm">The feeling you start each session with.</p>
           </div>
           <hlm-field-group>
             <hlm-field>
-              <span hlmFieldLabel id="mood-label">Default mood</span>
+              <span hlmFieldLabel class="font-semibold" id="mood-label">Default feeling</span>
               <hlm-radio-group formControlName="defaultMood" class="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-labelledby="mood-label">
                 @for (m of moods; track m.id) {
                   <div class="flex items-center gap-2">
                     <hlm-radio [value]="m.id" [inputId]="'mood-' + m.id"><hlm-radio-indicator indicator /></hlm-radio>
                     <label hlmLabel [for]="'mood-' + m.id" class="flex items-center gap-2 font-normal">
-                      <span class="size-2 rounded-full" [class]="m.dot"></span>{{ m.label }}
+                      <app-emotion-face [emotion]="m.id" [size]="18" [interactive]="true" />{{ m.label }}
                     </label>
                   </div>
                 }
@@ -124,19 +125,18 @@ import { PageHeaderComponent } from '../page-header.component';
           </button>
         </div>
 
-        <hlm-separator />
-
-        <section class="grid gap-6 md:grid-cols-[200px_1fr]">
+        <section class="bg-card ring-foreground/10 shadow-soft grid gap-6 rounded-2xl p-6 ring-1 md:grid-cols-[200px_1fr] md:p-8">
           <div>
-            <h2 class="text-sm font-medium">Appearance</h2>
+            <h2 class="text-base font-bold tracking-tight">Appearance</h2>
             <p class="text-muted-foreground mt-1 text-sm">Applies on this device.</p>
           </div>
-          <div class="bg-muted inline-flex w-fit rounded-lg p-[3px]" role="radiogroup" aria-label="Theme">
+          <div class="flex flex-col gap-4">
+          <div class="bg-muted inline-flex w-fit rounded-full p-1" role="radiogroup" aria-label="Theme">
             @for (t of themes; track t.id) {
               <button
                 type="button"
                 role="radio"
-                class="text-muted-foreground aria-checked:bg-background aria-checked:text-foreground inline-flex h-7 items-center gap-1.5 rounded-md px-3 text-sm font-medium transition aria-checked:shadow-sm"
+                class="text-muted-foreground aria-checked:bg-background aria-checked:text-foreground aria-checked:shadow-soft inline-flex h-8 items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition"
                 [attr.aria-checked]="theme.mode() === t.id"
                 (click)="theme.setMode(t.id)"
               >
@@ -144,13 +144,21 @@ import { PageHeaderComponent } from '../page-header.component';
               </button>
             }
           </div>
+          @if (canVibrate) {
+            <div class="flex items-center justify-between gap-4">
+              <label for="haptics" class="text-sm">
+                Haptic feedback
+                <span class="text-muted-foreground block text-xs">Each feeling has its own vibration when you send or react.</span>
+              </label>
+              <hlm-switch inputId="haptics" [checked]="haptics()" (checkedChange)="setHaptics($event)" />
+            </div>
+          }
+          </div>
         </section>
 
-        <hlm-separator />
-
-        <section class="grid gap-6 md:grid-cols-[200px_1fr]">
+        <section class="bg-card ring-foreground/10 shadow-soft grid gap-6 rounded-2xl p-6 ring-1 md:grid-cols-[200px_1fr] md:p-8">
           <div>
-            <h2 class="text-sm font-medium">Account</h2>
+            <h2 class="text-base font-bold tracking-tight">Account</h2>
             <p class="text-muted-foreground mt-1 text-sm">Password and session.</p>
           </div>
           <div class="flex flex-wrap gap-2">
@@ -176,6 +184,15 @@ export class SettingsPage {
     { id: 'dark', label: 'Dark', icon: 'lucideMoon' },
     { id: 'system', label: 'System', icon: 'lucideMonitor' },
   ];
+
+  readonly canVibrate = hapticsSupported();
+  haptics = signal(hapticsEnabled());
+
+  setHaptics(on: boolean): void {
+    this.haptics.set(on);
+    setHapticsEnabled(on);
+    if (on) vibrate('happy');
+  }
 
   private all = toSignal(this.users.all$, { initialValue: [] });
   me = computed(() => this.all().find((u) => u.uid === this.auth.uid()));

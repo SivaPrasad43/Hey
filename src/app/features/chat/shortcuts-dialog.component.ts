@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, Injectable, inject } from '@angular
 import { HlmDialogImports, HlmDialogService } from '@spartan-ng/helm/dialog';
 import { HlmKbdImports } from '@spartan-ng/helm/kbd';
 import { MOODS } from '../../core/moods';
+import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 
 @Injectable({ providedIn: 'root' })
 export class ShortcutsService {
@@ -17,7 +18,7 @@ export class ShortcutsService {
 
 @Component({
   selector: 'app-shortcuts-dialog',
-  imports: [HlmDialogImports, HlmKbdImports],
+  imports: [HlmDialogImports, HlmKbdImports, EmotionFaceComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex flex-col gap-4' },
   template: `
@@ -34,7 +35,7 @@ export class ShortcutsService {
       @for (m of moods; track m.id) {
         <div class="flex items-center justify-between py-2">
           <dt class="text-muted-foreground flex items-center gap-2">
-            <span class="size-2 rounded-full" [class]="m.dot"></span>Set mood to {{ m.label }}
+            <app-emotion-face [emotion]="m.id" [size]="16" />Feel {{ m.label.toLowerCase() }}
           </dt>
           <dd><kbd hlmKbd>Alt {{ m.shortcut }}</kbd></dd>
         </div>
@@ -47,6 +48,7 @@ export class ShortcutsDialogComponent {
   readonly rows = [
     ['Send message', 'Enter'],
     ['New line', 'Shift Enter'],
+    ['Send with another feeling', 'Hold send'],
     ['Show shortcuts', '?'],
     ['Close menu or dialog', 'Esc'],
   ];

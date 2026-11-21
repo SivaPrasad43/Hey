@@ -17,7 +17,7 @@ import { NewChatService } from './new-chat-dialog.component';
         <p hlmEmptyDescription>Choose a conversation from the sidebar or start a new one.</p>
       </hlm-empty-header>
       <hlm-empty-content>
-        <button hlmBtn variant="outline" size="sm" (click)="newChat.open('dm')"><ng-icon name="lucidePlus" /> New chat</button>
+        <button hlmBtn (click)="newChat.open('dm')"><ng-icon name="lucidePlus" /> New chat</button>
       </hlm-empty-content>
     </hlm-empty>
   `,

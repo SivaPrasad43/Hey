@@ -72,7 +72,7 @@ export class NewChatService {
       </hlm-field>
     }
 
-    <hlm-input-group>
+    <hlm-input-group class="rounded-full">
       <hlm-input-group-addon><ng-icon name="lucideSearch" /></hlm-input-group-addon>
       <input hlmInputGroupInput placeholder="Search people" aria-label="Search people" autocomplete="off" [value]="query()" (input)="query.set($any($event.target).value)" />
     </hlm-input-group>
@@ -82,19 +82,19 @@ export class NewChatService {
         <li>
           <button
             type="button"
-            class="hover:bg-accent flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors disabled:opacity-50"
+            class="hover:bg-accent flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors disabled:opacity-50"
             [attr.aria-pressed]="mode() === 'dm' ? null : selected().has(u.uid)"
             (click)="mode() === 'dm' ? startDm(u.uid, u.displayName) : toggle(u.uid)"
             [disabled]="busy()"
           >
             <app-avatar [name]="u.displayName" [uid]="u.uid" [color]="u.avatarColor" [online]="online(u)" />
             <span class="min-w-0 flex-1 leading-tight">
-              <span class="block truncate text-sm font-medium">{{ u.displayName }}</span>
+              <span class="block truncate text-sm font-semibold">{{ u.displayName }}</span>
               <span class="text-muted-foreground block truncate text-xs">{{ u.email }}</span>
             </span>
             @if (mode() !== 'dm') {
               <span
-                class="flex size-4 items-center justify-center rounded-[4px] border shadow-xs"
+                class="flex size-5 items-center justify-center rounded-full border"
                 [class]="selected().has(u.uid) ? 'bg-primary border-primary text-primary-foreground' : 'border-input'"
               >
                 @if (selected().has(u.uid)) {

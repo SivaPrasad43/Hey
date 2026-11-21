@@ -25,16 +25,16 @@ type Field = 'name' | 'email' | 'password';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-auth-card title="Create an account" description="Enter your details to get started.">
+    <app-auth-card title="Create your account" description="Pick a name, then start sharing how you feel.">
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <hlm-field-group>
           @if (error()) {
-            <p class="border-destructive/30 bg-destructive/5 text-destructive rounded-md border px-3 py-2 text-sm" role="alert">
+            <p class="bg-destructive/10 text-destructive rounded-xl px-4 py-3 text-sm font-medium" role="alert">
               {{ error() }}
             </p>
           }
           <hlm-field>
-            <label hlmFieldLabel for="name">Display name</label>
+            <label hlmFieldLabel class="font-semibold" for="name">Display name</label>
             <input
               hlmInput
               id="name"
@@ -49,7 +49,7 @@ type Field = 'name' | 'email' | 'password';
             }
           </hlm-field>
           <hlm-field>
-            <label hlmFieldLabel for="email">Email</label>
+            <label hlmFieldLabel class="font-semibold" for="email">Email</label>
             <input
               hlmInput
               id="email"
@@ -65,7 +65,7 @@ type Field = 'name' | 'email' | 'password';
             }
           </hlm-field>
           <hlm-field>
-            <label hlmFieldLabel for="password">Password</label>
+            <label hlmFieldLabel class="font-semibold" for="password">Password</label>
             <app-password-field
               [control]="form.controls.password"
               autocomplete="new-password"
@@ -77,15 +77,15 @@ type Field = 'name' | 'email' | 'password';
             </p>
           </hlm-field>
           <hlm-field>
-            <button hlmBtn type="submit" class="w-full" [disabled]="busy()">
+            <button hlmBtn size="lg" type="submit" class="mt-2 w-full" [disabled]="busy()">
               @if (busy()) {
                 <hlm-spinner />
               }
               Create account
             </button>
-            <p class="text-muted-foreground text-center text-sm">
+            <p class="text-muted-foreground mt-2 text-center text-sm">
               Already have an account?
-              <a routerLink="/login" class="text-foreground underline underline-offset-4">Sign in</a>
+              <a routerLink="/login" class="text-foreground font-semibold underline underline-offset-4">Sign in</a>
             </p>
           </hlm-field>
         </hlm-field-group>

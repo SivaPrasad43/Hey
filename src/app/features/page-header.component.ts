@@ -10,11 +10,11 @@ import { ThemeToggleComponent } from '../shared/ui/theme-toggle.component';
   imports: [RouterLink, NgIcon, HlmButtonImports, ThemeToggleComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <header class="flex h-14 shrink-0 items-center gap-2 border-b px-3 sm:px-4">
+    <header class="flex h-16 shrink-0 items-center gap-2 border-b px-3 sm:px-6">
       <a hlmBtn variant="ghost" size="icon-sm" routerLink="/chat" class="md:hidden" aria-label="Back to chats">
         <ng-icon name="lucideChevronLeft" />
       </a>
-      <h1 class="flex-1 truncate text-sm font-medium">{{ title() }}</h1>
+      <h1 class="text-title flex-1 truncate">{{ title() }}</h1>
       <app-theme-toggle />
     </header>
   `,

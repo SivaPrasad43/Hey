@@ -24,6 +24,9 @@ import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmEmptyImports } from '@spartan-ng/helm/empty';
 import { HlmTooltipImports } from '@spartan-ng/helm/tooltip';
 import { ConfirmService } from '../../shared/ui/confirm.service';
+import { vibrate } from '../../core/haptics';
+import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
+import { RoomMoodComponent } from './room-mood.component';
 import { ThemeToggleComponent } from '../../shared/ui/theme-toggle.component';
 import { EditEvent, ReactEvent } from './message-group.component';
 import { RoomService, otherMember, roomTitle } from '../../core/room.service';
@@ -42,7 +45,7 @@ import { ShortcutsService } from './shortcuts-dialog.component';
 
 @Component({
     selector: 'app-room-page',
-    imports: [RouterLink, NgIcon, HlmButtonImports, HlmEmptyImports, HlmTooltipImports, AvatarComponent, ComposerComponent, MessageListComponent, ThemeToggleComponent],
+    imports: [RouterLink, NgIcon, HlmButtonImports, HlmEmptyImports, HlmTooltipImports, AvatarComponent, ComposerComponent, MessageListComponent, ThemeToggleComponent, RoomMoodComponent, EmotionFaceComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: {
     class: 'flex h-full min-h-0 flex-col',
@@ -60,7 +63,7 @@ import { ShortcutsService } from './shortcuts-dialog.component';
         </hlm-empty-content>
       </hlm-empty>
     } @else {
-      <header class="flex h-14 shrink-0 items-center gap-2 border-b px-3 sm:px-4">
+      <header class="flex h-16 shrink-0 items-center gap-2 border-b px-3 sm:px-6">
         <a hlmBtn variant="ghost" size="icon-sm" routerLink="/chat" class="md:hidden" aria-label="Back to chats">
           <ng-icon name="lucideChevronLeft" />
         </a>
@@ -71,9 +74,10 @@ import { ShortcutsService } from './shortcuts-dialog.component';
             <ng-icon name="lucideHash" class="text-muted-foreground" />
           }
           <div class="min-w-0 flex-1 leading-tight">
-            <h1 class="truncate text-sm font-medium">{{ title() }}</h1>
+            <h1 class="text-title truncate">{{ title() }}</h1>
             <p class="text-muted-foreground truncate text-xs" aria-live="polite">{{ typingLabel() || subtitle() }}</p>
           </div>
+          <app-room-mood [messages]="messages()" [filter]="filter()" (filterChange)="filter.set($event)" />
           @if (r.type === 'group') {
             <button hlmBtn variant="ghost" size="icon-sm" (click)="newChat.open('add', r)" aria-label="Add people" hlmTooltip="Add people">
               <ng-icon name="lucideUserPlus" />
@@ -88,7 +92,16 @@ import { ShortcutsService } from './shortcuts-dialog.component';
         <app-theme-toggle />
       </header>
 
+      @if (filter(); as f) {
+        <div class="flex shrink-0 justify-center px-4 pt-3"><div class="bg-muted flex h-10 items-center gap-2 rounded-full pr-1.5 pl-4 text-sm">
+          <app-emotion-face [emotion]="f" [size]="16" [play]="f" />
+          <span>Showing <span class="font-medium">{{ filterLabel() }}</span> messages · {{ filteredCount() }}</span>
+          <button hlmBtn variant="outline" size="xs" class="bg-background ml-2" (click)="filter.set(null)"><ng-icon name="lucideX" /> Clear</button>
+        </div></div>
+      }
+
       <app-message-list
+        [filter]="filter()"
         [messages]="messages()"
         [meUid]="auth.uid()"
         [colors]="colors()"
@@ -101,7 +114,7 @@ import { ShortcutsService } from './shortcuts-dialog.component';
         (remove)="onRemove($event)"
       />
 
-      <div class="px-3 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
+      <div class="px-3 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
         <app-composer [roomName]="title()" (send)="send($event)" (typing)="onTyping()" (stoppedTyping)="onStopTyping()" />
       </div>
     }
@@ -189,6 +202,14 @@ export class RoomPage {
       out.push(m);
     }
     return [...out, ...this.pending().filter((p) => !confirmed.has(p.id))];
+  });
+
+  // ---- emotion filter ----
+  filter = signal<MoodId | null>(null);
+  filterLabel = computed(() => (this.filter() ? getMood(this.filter()).label : ''));
+  filteredCount = computed(() => {
+    const f = this.filter();
+    return f ? this.messages().filter((m) => m.type === 'text' && !m.deleted && getMood(m.mood).id === f).length : 0;
   });
 
   // ---- typing ----
@@ -282,6 +303,7 @@ export class RoomPage {
   }
 
   private async openRoom(id: string): Promise<void> {
+    this.filter.set(null);
     this.clearPages();
     this.loading.set(true);
     this.pending.set([]);
@@ -320,6 +342,7 @@ export class RoomPage {
     const me = this.auth.uid();
     if (!me) return;
     const next = nextReaction(msg.reactions?.[me] ? getMood(msg.reactions[me]).id : undefined, mood);
+    if (next) vibrate(next);
     this.messagesSvc.react(this.roomId(), msg.id, me, next).catch(() => this.toast.error('Couldn’t save the reaction.'));
   }
 
@@ -350,6 +373,7 @@ export class RoomPage {
     const uid = this.auth.uid();
     if (!uid) return;
     const clientId = crypto.randomUUID();
+    vibrate(mood);
     const sender = { uid, name: this.auth.displayName() };
     this.pending.update((p) => [
       ...p,

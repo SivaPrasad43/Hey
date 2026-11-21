@@ -28,7 +28,19 @@ export type Row =
       items: RunItem[];
     };
 
-export function buildRows(messages: DisplayMessage[], meUid: string | null, now = new Date()): Row[] {
+/** Text messages that are visible under an emotion filter. */
+export function matchesFilter(m: Message, filter: MoodId | null): boolean {
+  if (!filter) return true;
+  return m.type === 'text' && !m.deleted && getMood(m.mood).id === filter;
+}
+
+export function buildRows(
+  all: DisplayMessage[],
+  meUid: string | null,
+  now = new Date(),
+  filter: MoodId | null = null,
+): Row[] {
+  const messages = filter ? all.filter((m) => matchesFilter(m, filter)) : all;
   const rows: Row[] = [];
   let prevDate: Date | null = null;
   let run: Extract<Row, { kind: 'run' }> | null = null;
@@ -91,4 +103,71 @@ export function reactionChips(reactions: Record<string, MoodId> | undefined, meU
     count: values.filter(([, v]) => getMood(v).id === m.id).length,
     mine: !!meUid && getMood(reactions[meUid]).id === m.id && meUid in reactions,
   })).filter((c) => c.count > 0);
+}
+
+/**
+ * Ids of messages that arrived at the end since the previous emission (live arrivals), ignoring
+ * older pages that were prepended and server copies of messages we already showed optimistically.
+ * `prev` is null for the first render, which yields nothing.
+ */
+export function newArrivals(prev: ReadonlySet<string> | null, next: readonly DisplayMessage[]): string[] {
+  if (!prev) return [];
+  const fresh: string[] = [];
+  for (let i = next.length - 1; i >= 0; i--) {
+    const m = next[i];
+    if (prev.has(m.id) || (m.clientId && prev.has(m.clientId))) break;
+    if (m.type === 'text') fresh.push(m.id);
+  }
+  return fresh.reverse();
+}
+
+export type ReactionCounts = Map<string, Partial<Record<MoodId, number>>>;
+
+export function countReactions(messages: readonly DisplayMessage[]): ReactionCounts {
+  const out: ReactionCounts = new Map();
+  for (const m of messages) {
+    if (!m.reactions) continue;
+    const c: Partial<Record<MoodId, number>> = {};
+    for (const v of Object.values(m.reactions)) {
+      const id = getMood(v).id;
+      c[id] = (c[id] ?? 0) + 1;
+    }
+    out.set(m.id, c);
+  }
+  return out;
+}
+
+/** `${messageId}:${mood}` keys whose reaction count went up. */
+export function reactionIncreases(prev: ReactionCounts | null, next: ReactionCounts): string[] {
+  if (!prev) return [];
+  const keys: string[] = [];
+  for (const [id, counts] of next) {
+    const before = prev.get(id) ?? {};
+    for (const mood of Object.keys(counts) as MoodId[]) {
+      if ((counts[mood] ?? 0) > (before[mood] ?? 0)) keys.push(`${id}:${mood}`);
+    }
+  }
+  return keys;
+}
+
+export interface TimelineSegment {
+  id: string;
+  mood: MoodId;
+  label: string;
+  /** 0–100 */
+  top: number;
+  height: number;
+}
+
+/** One segment per visible text message, laid out evenly top to bottom. */
+export function timelineSegments(messages: readonly DisplayMessage[]): TimelineSegment[] {
+  const texts = messages.filter((m) => m.type === 'text' && !m.deleted && !m.pending);
+  const n = texts.length;
+  return texts.map((m, i) => ({
+    id: m.id,
+    mood: getMood(m.mood).id,
+    label: `${m.senderName} · ${getMood(m.mood).label}: ${m.text.length > 48 ? m.text.slice(0, 48) + '…' : m.text}`,
+    top: (i / n) * 100,
+    height: 100 / n,
+  }));
 }

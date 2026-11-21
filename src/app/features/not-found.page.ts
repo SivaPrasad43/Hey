@@ -12,7 +12,7 @@ import { HlmEmptyImports } from '@spartan-ng/helm/empty';
       <hlm-empty>
         <hlm-empty-header>
           <p class="text-muted-foreground font-mono text-sm">404</p>
-          <h1 hlmEmptyTitle>Page not found</h1>
+          <h1 hlmEmptyTitle class="text-display">Page not found</h1>
           <p hlmEmptyDescription>The page you’re looking for doesn’t exist or has moved.</p>
         </hlm-empty-header>
         <hlm-empty-content>
