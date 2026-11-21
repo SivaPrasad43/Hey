@@ -1,0 +1,387 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
+import { Observable, Subscription, catchError, of, switchMap } from 'rxjs';
+import { AuthService } from '../../core/auth.service';
+import { MessageService, nextReaction } from '../../core/message.service';
+import { Message } from '../../core/models';
+import { MoodId, getMood } from '../../core/moods';
+import { Timestamp } from '@angular/fire/firestore';
+import { NgIcon } from '@ng-icons/core';
+import { HlmButtonImports } from '@spartan-ng/helm/button';
+import { HlmEmptyImports } from '@spartan-ng/helm/empty';
+import { HlmTooltipImports } from '@spartan-ng/helm/tooltip';
+import { ConfirmService } from '../../shared/ui/confirm.service';
+import { ThemeToggleComponent } from '../../shared/ui/theme-toggle.component';
+import { EditEvent, ReactEvent } from './message-group.component';
+import { RoomService, otherMember, roomTitle } from '../../core/room.service';
+import { ToastService } from '../../core/toast.service';
+import { TYPING_TTL_MS, TypingService } from '../../core/typing.service';
+import { UserService, isOnline } from '../../core/user.service';
+import { shortAgo } from '../../core/time';
+import { AvatarComponent } from '../../shared/ui/avatar.component';
+import { ChatStateService } from './chat-state.service';
+import { ComposerComponent } from './composer.component';
+import { DisplayMessage } from './message-rows';
+import { MessageListComponent } from './message-list.component';
+import { NewChatService } from './new-chat-dialog.component';
+import { ShortcutsService } from './shortcuts-dialog.component';
+
+
+@Component({
+    selector: 'app-room-page',
+    imports: [RouterLink, NgIcon, HlmButtonImports, HlmEmptyImports, HlmTooltipImports, AvatarComponent, ComposerComponent, MessageListComponent, ThemeToggleComponent],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    host: {
+    class: 'flex h-full min-h-0 flex-col',
+        '(document:keydown)': 'onKey($event)',
+    },
+    template: `
+    @if (notFound()) {
+      <hlm-empty class="flex-1">
+        <hlm-empty-header>
+          <h2 hlmEmptyTitle>Conversation not found</h2>
+          <p hlmEmptyDescription>It may have been removed, or you’re not a member.</p>
+        </hlm-empty-header>
+        <hlm-empty-content>
+          <a hlmBtn variant="outline" routerLink="/chat">Back to chats</a>
+        </hlm-empty-content>
+      </hlm-empty>
+    } @else {
+      <header class="flex h-14 shrink-0 items-center gap-2 border-b px-3 sm:px-4">
+        <a hlmBtn variant="ghost" size="icon-sm" routerLink="/chat" class="md:hidden" aria-label="Back to chats">
+          <ng-icon name="lucideChevronLeft" />
+        </a>
+        @if (room(); as r) {
+          @if (r.type === 'dm') {
+            <app-avatar size="sm" [name]="title()" [uid]="dmPeerId() ?? ''" [color]="dmPeer()?.avatarColor" [online]="dmPeerOnline()" />
+          } @else {
+            <ng-icon name="lucideHash" class="text-muted-foreground" />
+          }
+          <div class="min-w-0 flex-1 leading-tight">
+            <h1 class="truncate text-sm font-medium">{{ title() }}</h1>
+            <p class="text-muted-foreground truncate text-xs" aria-live="polite">{{ typingLabel() || subtitle() }}</p>
+          </div>
+          @if (r.type === 'group') {
+            <button hlmBtn variant="ghost" size="icon-sm" (click)="newChat.open('add', r)" aria-label="Add people" hlmTooltip="Add people">
+              <ng-icon name="lucideUserPlus" />
+            </button>
+          }
+          <button hlmBtn variant="ghost" size="icon-sm" class="hidden md:inline-flex" (click)="shortcuts.show()" aria-label="Keyboard shortcuts" hlmTooltip="Shortcuts">
+            <ng-icon name="lucideKeyboard" />
+          </button>
+        } @else {
+          <div class="flex-1"></div>
+        }
+        <app-theme-toggle />
+      </header>
+
+      <app-message-list
+        [messages]="messages()"
+        [meUid]="auth.uid()"
+        [colors]="colors()"
+        [loading]="loading()"
+        [hasMore]="hasMore()"
+        [loadingOlder]="loadingOlder()"
+        (loadOlder)="loadOlder()"
+        (react)="onReact($event)"
+        (edit)="onEdit($event)"
+        (remove)="onRemove($event)"
+      />
+
+      <div class="px-3 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
+        <app-composer [roomName]="title()" (send)="send($event)" (typing)="onTyping()" (stoppedTyping)="onStopTyping()" />
+      </div>
+    }
+  `
+})
+export class RoomPage {
+  roomId = input.required<string>();
+
+  auth = inject(AuthService);
+  private roomsSvc = inject(RoomService);
+  private messagesSvc = inject(MessageService);
+  private typingSvc = inject(TypingService);
+  private usersSvc = inject(UserService);
+  private toast = inject(ToastService);
+  private state = inject(ChatStateService);
+
+  newChat = inject(NewChatService);
+  shortcuts = inject(ShortcutsService);
+  private confirm = inject(ConfirmService);
+  private composer = viewChild(ComposerComponent);
+
+  private roomId$ = toObservable(this.roomId);
+  private roomState = toSignal(
+    this.roomId$.pipe(switchMap((id) => this.roomsSvc.room$(id).pipe(catchError(() => of(null))))),
+    { initialValue: undefined },
+  );
+  room = computed(() => this.roomState() ?? undefined);
+  notFound = computed(() => this.roomState() === null);
+
+  private users = toSignal(this.usersSvc.all$, { initialValue: [] });
+  private usersById = computed(() => new Map(this.users().map((u) => [u.uid, u])));
+  colors = computed(() => Object.fromEntries(this.users().map((u) => [u.uid, u.avatarColor])));
+
+  title = computed(() => {
+    const r = this.room();
+    return r ? roomTitle(r, this.auth.uid()) : '';
+  });
+  dmPeerId = computed(() => {
+    const r = this.room();
+    return r ? otherMember(r, this.auth.uid()) : null;
+  });
+  dmPeer = computed(() => {
+    const id = this.dmPeerId();
+    return id ? this.usersById().get(id) : undefined;
+  });
+  dmPeerOnline = computed(() => isOnline(this.dmPeer(), this.usersSvc.now()));
+
+  subtitle = computed(() => {
+    const r = this.room();
+    if (!r) return '';
+    const now = this.usersSvc.now();
+    if (r.type === 'dm') {
+      const peer = this.dmPeer();
+      if (isOnline(peer, now)) return 'Online';
+      return peer?.lastSeen ? `Last seen ${shortAgo(peer.lastSeen.toDate(), new Date(now))} ago`.replace('now ago', 'just now') : 'Offline';
+    }
+    const online = r.members.filter((m) => isOnline(this.usersById().get(m), now)).length;
+    return `${r.members.length} member${r.members.length === 1 ? '' : 's'} · ${online} online`;
+  });
+
+  // ---- messages ----
+  /** page key (0 = newest, -1, -2… older) -> live messages in that page */
+  private pages = signal<Record<number, Message[]>>({});
+  private pageSubs: Subscription[] = [];
+  private oldestCursor: Timestamp | null = null;
+  private live = computed(() => this.pages()[0] ?? []);
+  private pending = signal<DisplayMessage[]>([]);
+  loading = signal(true);
+  loadingOlder = signal(false);
+  hasMore = signal(false);
+
+  messages = computed<DisplayMessage[]>(() => {
+    const live = this.live();
+    const confirmed = new Set(live.map((m) => (m as Message & { clientId?: string }).clientId).filter(Boolean));
+    const seen = new Set<string>();
+    const out: DisplayMessage[] = [];
+    const pages = this.pages();
+    const ordered = Object.keys(pages)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .flatMap((k) => pages[k]);
+    for (const m of ordered) {
+      if (seen.has(m.id)) continue;
+      seen.add(m.id);
+      out.push(m);
+    }
+    return [...out, ...this.pending().filter((p) => !confirmed.has(p.id))];
+  });
+
+  // ---- typing ----
+  private tick = signal(Date.now());
+  private typers = toSignal(
+    this.roomId$.pipe(switchMap((id) => this.typingSvc.typers$(id).pipe(catchError(() => of([]))))),
+    { initialValue: [] },
+  );
+  typingLabel = computed(() => {
+    const now = this.tick();
+    const me = this.auth.uid();
+    const names = this.typers()
+      .filter((t) => t.uid !== me && t.at && now - t.at.toMillis() < TYPING_TTL_MS)
+      .map((t) => t.name);
+    if (!names.length) return '';
+    if (names.length === 1) return `${names[0]} is typing…`;
+    if (names.length === 2) return `${names[0]} and ${names[1]} are typing…`;
+    return `${names.length} people are typing…`;
+  });
+
+  private lastMarkRead = 0;
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+
+    this.roomId$.pipe(takeUntilDestroyed()).subscribe((id) => {
+      const prev = this.state.activeRoomId();
+      const me = this.auth.uid();
+      if (prev && me && prev !== id) this.typingSvc.stop(prev, me);
+      this.state.activeRoomId.set(id);
+      void this.openRoom(id);
+    });
+
+    const tick = setInterval(() => this.tick.set(Date.now()), 2000);
+    destroyRef.onDestroy(() => {
+      clearInterval(tick);
+      this.clearPages();
+      const me = this.auth.uid();
+      const id = this.state.activeRoomId();
+      if (me && id) this.typingSvc.stop(id, me);
+      this.state.activeRoomId.set(null);
+    });
+
+    // Mark the room read when it's opened and whenever new messages land while it's visible.
+    effect(() => {
+      const count = this.live().length;
+      const me = this.auth.uid();
+      const id = this.roomId();
+      if (!me || !count) return;
+      untracked(() => this.markRead(me, id));
+    });
+
+    document.addEventListener('visibilitychange', this.onVisible);
+    destroyRef.onDestroy(() => document.removeEventListener('visibilitychange', this.onVisible));
+  }
+
+  private onVisible = () => {
+    const me = this.auth.uid();
+    if (document.visibilityState === 'visible' && me) this.markRead(me, this.roomId(), true);
+  };
+
+  private markRead(uid: string, roomId: string, force = false): void {
+    if (document.visibilityState !== 'visible') return;
+    const now = Date.now();
+    if (!force && now - this.lastMarkRead < 3000) return;
+    this.lastMarkRead = now;
+    void this.usersSvc.markRead(uid, roomId);
+  }
+
+  private clearPages(): void {
+    this.pageSubs.forEach((sub) => sub.unsubscribe());
+    this.pageSubs = [];
+    this.pages.set({});
+    this.oldestCursor = null;
+  }
+
+  private watchPage(key: number, page: { messages$: Observable<Message[]> }, onFirst?: () => void): void {
+    let first = true;
+    this.pageSubs.push(
+      page.messages$.subscribe({
+        next: (msgs) => {
+          this.pages.update((p) => ({ ...p, [key]: msgs }));
+          if (first) {
+            first = false;
+            onFirst?.();
+          }
+        },
+        error: () => onFirst?.(),
+      }),
+    );
+  }
+
+  private async openRoom(id: string): Promise<void> {
+    this.clearPages();
+    this.loading.set(true);
+    this.pending.set([]);
+    try {
+      const page = await this.messagesSvc.page(id, null);
+      if (id !== this.roomId()) return;
+      this.hasMore.set(page.full);
+      this.oldestCursor = page.oldest;
+      this.watchPage(0, page, () => this.loading.set(false));
+    } catch {
+      this.loading.set(false);
+    }
+    setTimeout(() => this.composer()?.focus());
+  }
+
+  async loadOlder(): Promise<void> {
+    const before = this.oldestCursor;
+    if (!before || this.loadingOlder()) return;
+    const id = this.roomId();
+    this.loadingOlder.set(true);
+    try {
+      const page = await this.messagesSvc.page(id, before);
+      if (id !== this.roomId()) return;
+      const key = Math.min(0, ...Object.keys(this.pages()).map(Number)) - 1;
+      this.oldestCursor = page.oldest;
+      this.hasMore.set(page.full && !!page.oldest);
+      await new Promise<void>((resolve) => this.watchPage(key, page, resolve));
+    } catch {
+      this.toast.error('Couldn’t load older messages.');
+    } finally {
+      this.loadingOlder.set(false);
+    }
+  }
+
+  onReact({ msg, mood }: ReactEvent): void {
+    const me = this.auth.uid();
+    if (!me) return;
+    const next = nextReaction(msg.reactions?.[me] ? getMood(msg.reactions[me]).id : undefined, mood);
+    this.messagesSvc.react(this.roomId(), msg.id, me, next).catch(() => this.toast.error('Couldn’t save the reaction.'));
+  }
+
+  onEdit({ msg, text }: EditEvent): void {
+    const room = this.room();
+    if (!room) return;
+    this.messagesSvc.edit(room, msg, text).catch(() => this.toast.error('Couldn’t save the edit.'));
+  }
+
+  async onRemove(msg: Message): Promise<void> {
+    const room = this.room();
+    if (!room) return;
+    const ok = await this.confirm.ask({
+      title: 'Delete message?',
+      description: 'Everyone in this conversation will see that a message was deleted. This can’t be undone.',
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      await this.messagesSvc.remove(room, msg);
+    } catch {
+      this.toast.error('Couldn’t delete the message.');
+    }
+  }
+
+  async send({ text, mood }: { text: string; mood: MoodId }): Promise<void> {
+    const uid = this.auth.uid();
+    if (!uid) return;
+    const clientId = crypto.randomUUID();
+    const sender = { uid, name: this.auth.displayName() };
+    this.pending.update((p) => [
+      ...p,
+      { id: clientId, type: 'text', text, mood, senderId: uid, senderName: sender.name, createdAt: null, pending: true },
+    ]);
+    try {
+      await this.messagesSvc.send(this.roomId(), sender, text, mood, clientId);
+    } catch {
+      this.pending.update((p) => p.filter((m) => m.id !== clientId));
+      this.toast.error('Message not sent. Check your connection.');
+    }
+    // Drop the optimistic copy once the server copy has arrived (or after a grace period).
+    setTimeout(() => this.pending.update((p) => p.filter((m) => m.id !== clientId)), 10_000);
+  }
+
+  onTyping(): void {
+    const uid = this.auth.uid();
+    if (uid) this.typingSvc.ping(this.roomId(), uid, this.auth.displayName());
+  }
+
+  onStopTyping(): void {
+    const uid = this.auth.uid();
+    if (uid) this.typingSvc.stop(this.roomId(), uid);
+  }
+
+  onKey(e: KeyboardEvent): void {
+    const target = e.target instanceof Element ? e.target : null;
+    const typingInField = !!target?.closest('input, textarea, select, [contenteditable="true"]');
+    if (e.key === '?' && !typingInField && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      this.shortcuts.show();
+    }
+  }
+}
+

@@ -1,0 +1,7 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "hey-dev", "runtimeExecutable": "npx", "runtimeArgs": ["ng", "serve", "--port", "4201"], "port": 4201, "autoPort": false },
+    { "name": "hey-emu", "runtimeExecutable": "npx", "runtimeArgs": ["ng", "serve", "--port", "4202", "--configuration", "emulators"], "port": 4202, "autoPort": false }
+  ]
+}
