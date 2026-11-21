@@ -5,19 +5,24 @@
   <title>Hey</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-  <meta name="theme-color" content="#cf7ee5">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <meta name="theme-color" content="#16131f">
+  <link rel="icon" href="favicon.ico" sizes="32x32">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script>
     // Apply the saved theme before first paint to avoid a flash.
     try {
+      // Dark unless the person chose light, or chose "system" and their OS is light.
       var t = localStorage.getItem('hey-theme');
-      if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
-      }
-    } catch (e) {}
+      var dark = t === 'light' ? false : t === 'system' ? matchMedia('(prefers-color-scheme: dark)').matches : true;
+      if (dark) document.documentElement.classList.add('dark');
+    } catch (e) {
+      document.documentElement.classList.add('dark');
+    }
   </script>
 </head>
 <body>

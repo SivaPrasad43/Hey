@@ -9,6 +9,7 @@ import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmTooltipImports } from '@spartan-ng/helm/tooltip';
 import { ThemeMode, ThemeService } from '../../core/theme.service';
 import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
+import { LogoComponent } from '../../shared/ui/logo.component';
 import { catchError, filter, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { Room } from '../../core/models';
@@ -50,6 +51,7 @@ interface RoomItem {
     HlmTooltipImports,
     AvatarComponent,
     EmotionFaceComponent,
+    LogoComponent,
   ],
     changeDetection: ChangeDetectionStrategy.OnPush,
       template: `
@@ -60,8 +62,7 @@ interface RoomItem {
         aria-label="Chats"
       >
         <div class="flex h-16 shrink-0 items-center gap-2 px-5 pt-[env(safe-area-inset-top)] max-md:h-14 max-md:px-4">
-          <span class="bg-primary text-primary-foreground flex size-7 items-center justify-center rounded-full text-xs font-bold">H</span>
-          <span class="text-base font-bold tracking-tight">Hey</span>
+          <app-logo [size]="28" />
           <!-- phone: account menu lives in the app bar -->
           <button
             type="button"

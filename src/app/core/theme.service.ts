@@ -2,6 +2,8 @@ import { Injectable, signal } from '@angular/core';
 
 const KEY = 'hey-theme';
 export type ThemeMode = 'light' | 'dark' | 'system';
+/** Theme for people who haven't chosen one. Keep in sync with the pre-paint script in index.html. */
+export const DEFAULT_THEME: ThemeMode = 'dark';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
@@ -18,8 +20,7 @@ export class ThemeService {
   setMode(mode: ThemeMode): void {
     this.mode.set(mode);
     try {
-      if (mode === 'system') localStorage.removeItem(KEY);
-      else localStorage.setItem(KEY, mode);
+      localStorage.setItem(KEY, mode);
     } catch {
       /* storage unavailable */
     }
@@ -40,8 +41,8 @@ export class ThemeService {
 function readMode(): ThemeMode {
   try {
     const v = localStorage.getItem(KEY);
-    return v === 'light' || v === 'dark' ? v : 'system';
+    return v === 'light' || v === 'dark' || v === 'system' ? v : DEFAULT_THEME;
   } catch {
-    return 'system';
+    return DEFAULT_THEME;
   }
 }
