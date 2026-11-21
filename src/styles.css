@@ -361,3 +361,67 @@ input:-webkit-autofill:focus {
   caret-color: var(--foreground);
   transition: background-color 600000s 0s, color 600000s 0s;
 }
+
+/* ---------- Chat atmosphere (mood-tinted background) ---------- */
+:root {
+  --atmo-strength: 34%;
+  --atmo-wash: 26%;
+  --atmo-particle: 0.32;
+}
+.dark {
+  --atmo-strength: 28%;
+  --atmo-wash: 20%;
+  --atmo-particle: 0.26;
+}
+.mood-atmo-wash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(130% 95% at 50% 0%, color-mix(in oklch, var(--atmo-c) var(--atmo-wash), transparent), transparent);
+  transition: opacity 1.8s ease;
+}
+.mood-atmo-glow {
+  position: absolute;
+  width: 95%;
+  height: 75%;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, color-mix(in oklch, var(--atmo-c) var(--atmo-strength), transparent), transparent);
+  transition:
+    opacity 1.8s ease,
+    transform 2.4s ease;
+  will-change: opacity, transform;
+}
+.mood-atmo-particle {
+  position: absolute;
+  bottom: -40px;
+  opacity: 0;
+  animation: atmo-drift linear infinite;
+  will-change: transform, opacity;
+}
+@keyframes atmo-drift {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: var(--atmo-particle);
+  }
+  50% {
+    transform: translate3d(18px, -55vh, 0) rotate(25deg);
+  }
+  88% {
+    opacity: var(--atmo-particle);
+  }
+  100% {
+    transform: translate3d(-10px, calc(-100vh - 60px), 0) rotate(-15deg);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mood-atmo-wash,
+  .mood-atmo-glow {
+    transition: none;
+  }
+  .mood-atmo-particle {
+    display: none;
+  }
+}

@@ -16,6 +16,7 @@ import { DEFAULT_MOOD, MOODS, MoodId, getMood } from '../../core/moods';
 import { ThemeMode, ThemeService } from '../../core/theme.service';
 import { ToastService } from '../../core/toast.service';
 import { PwaService } from '../../core/pwa.service';
+import { atmosphereEnabled, setAtmosphereEnabled } from '../../core/atmosphere-setting';
 import { AVATAR_COLORS, UserService, colorFor } from '../../core/user.service';
 import { AvatarComponent } from '../../shared/ui/avatar.component';
 import { ChatStateService } from '../chat/chat-state.service';
@@ -145,6 +146,13 @@ import { PageHeaderComponent } from '../page-header.component';
               </button>
             }
           </div>
+          <div class="flex items-center justify-between gap-4">
+            <label for="atmosphere" class="text-sm">
+              Feeling backgrounds
+              <span class="text-muted-foreground block text-xs">Chats glow with the feelings in recent messages.</span>
+            </label>
+            <hlm-switch inputId="atmosphere" [checked]="atmosphere()" (checkedChange)="setAtmosphere($event)" />
+          </div>
           @if (canVibrate) {
             <div class="flex items-center justify-between gap-4">
               <label for="haptics" class="text-sm">
@@ -232,6 +240,11 @@ export class SettingsPage {
 
   readonly canVibrate = hapticsSupported();
   haptics = signal(hapticsEnabled());
+
+  readonly atmosphere = atmosphereEnabled;
+  setAtmosphere(on: boolean): void {
+    setAtmosphereEnabled(on);
+  }
 
   setHaptics(on: boolean): void {
     this.haptics.set(on);

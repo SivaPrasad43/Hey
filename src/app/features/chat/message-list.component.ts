@@ -46,7 +46,7 @@ const DIRECTION_PX = 24;
     template: `
     <div
       #scroller
-      class="flex-1 overflow-y-auto overscroll-contain"
+      class="relative flex-1 overflow-y-auto overscroll-contain"
       role="log"
       aria-live="polite"
       aria-relevant="additions"

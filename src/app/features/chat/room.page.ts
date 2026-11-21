@@ -40,7 +40,7 @@ import { shortAgo } from '../../core/time';
 import { AvatarComponent } from '../../shared/ui/avatar.component';
 import { ChatStateService } from './chat-state.service';
 import { ComposerComponent } from './composer.component';
-import { DisplayMessage } from './message-rows';
+import { DisplayMessage, matchesFilter } from './message-rows';
 import { MessageListComponent } from './message-list.component';
 import { NewChatService } from './new-chat-dialog.component';
 import { ShortcutsService } from './shortcuts-dialog.component';
@@ -48,9 +48,13 @@ import { ShortcutsService } from './shortcuts-dialog.component';
 
 import { recentMembers } from './recent-members';
 
+import { atmosphereEnabled } from '../../core/atmosphere-setting';
+import { atmosphere } from './mood-atmosphere';
+import { MoodAtmosphereComponent } from './mood-atmosphere.component';
+
 @Component({
     selector: 'app-room-page',
-    imports: [RouterLink, NgIcon, HlmButtonImports, HlmEmptyImports, HlmTooltipImports, AvatarComponent, ComposerComponent, MessageListComponent, RoomMoodComponent, EmotionFaceComponent, RoomInfoSheetComponent, MessageActionsSheetComponent],
+    imports: [RouterLink, NgIcon, HlmButtonImports, HlmEmptyImports, HlmTooltipImports, AvatarComponent, ComposerComponent, MessageListComponent, RoomMoodComponent, EmotionFaceComponent, RoomInfoSheetComponent, MessageActionsSheetComponent, MoodAtmosphereComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: {
     class: 'flex h-full min-h-0 flex-col',
@@ -102,8 +106,13 @@ import { recentMembers } from './recent-members';
         }
       </header>
 
+      <!-- Messages and composer share one mood-tinted backdrop. -->
+      <div class="relative flex min-h-0 flex-1 flex-col">
+      @if (atmosphereOn() && !loading()) {
+        <app-mood-atmosphere [weather]="weather()" />
+      }
       @if (filter(); as f) {
-        <div class="flex shrink-0 justify-center px-4 pt-3"><div class="bg-muted flex h-10 items-center gap-2 rounded-full pr-1.5 pl-4 text-sm">
+        <div class="relative flex shrink-0 justify-center px-4 pt-3"><div class="bg-muted flex h-10 items-center gap-2 rounded-full pr-1.5 pl-4 text-sm">
           <app-emotion-face [emotion]="f" [size]="16" [play]="f" />
           <span>Showing <span class="font-medium">{{ filterLabel() }}</span> messages · {{ filteredCount() }}</span>
           <button hlmBtn variant="outline" size="xs" class="bg-background ml-2" (click)="filter.set(null)"><ng-icon name="lucideX" /> Clear</button>
@@ -143,7 +152,7 @@ import { recentMembers } from './recent-members';
       <!-- Slides away while reading back through history; returns on scroll down, at the latest message, or on focus. -->
       <div
         #composerWrap
-        class="grid shrink-0 transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none"
+        class="relative grid shrink-0 transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none"
         [class.grid-rows-[1fr]]="!composerHidden()"
         [class.grid-rows-[0fr]]="composerHidden()"
         [class.opacity-0]="composerHidden()"
@@ -166,6 +175,7 @@ import { recentMembers } from './recent-members';
           />
           </div>
         </div>
+      </div>
       </div>
     }
   `
@@ -304,6 +314,9 @@ export class RoomPage {
 
   // ---- emotion filter ----
   filter = signal<MoodId | null>(null);
+  readonly atmosphereOn = atmosphereEnabled;
+  /** The room's emotional weather, from what's on screen (so a feeling filter tints the whole room). */
+  weather = computed(() => atmosphere(this.messages().filter((m) => matchesFilter(m, this.filter()))));
   filterLabel = computed(() => (this.filter() ? getMood(this.filter()).label : ''));
   filteredCount = computed(() => {
     const f = this.filter();
