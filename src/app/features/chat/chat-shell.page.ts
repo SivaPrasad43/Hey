@@ -7,7 +7,6 @@ import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
 import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
 import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmTooltipImports } from '@spartan-ng/helm/tooltip';
-import { ThemeMode, ThemeService } from '../../core/theme.service';
 import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import { LogoComponent } from '../../shared/ui/logo.component';
 import { catchError, filter, map, of, switchMap } from 'rxjs';
@@ -281,16 +280,6 @@ interface RoomItem {
         <hlm-dropdown-menu-separator />
         <a hlmDropdownMenuItem routerLink="/chat/settings"><ng-icon name="lucideSettings" /> Settings</a>
         <a hlmDropdownMenuItem routerLink="/chat/help"><ng-icon name="lucideCircleHelp" /> Help</a>
-        <hlm-dropdown-menu-separator />
-        <hlm-dropdown-menu-label class="text-muted-foreground text-xs font-normal">Theme</hlm-dropdown-menu-label>
-        @for (t of themes; track t.id) {
-          <button hlmDropdownMenuRadio keepOpen="false" [checked]="theme.mode() === t.id" (triggered)="theme.setMode(t.id)">
-            <hlm-dropdown-menu-radio-indicator />
-            {{ t.label }}
-          </button>
-        }
-        <hlm-dropdown-menu-separator />
-        <button hlmDropdownMenuItem variant="destructive" (triggered)="logout()"><ng-icon name="lucideLogOut" /> Log out</button>
       </hlm-dropdown-menu>
     </ng-template>
   `,
@@ -309,11 +298,6 @@ export class ChatShellPage {
     { id: 'archive', label: 'Archive', icon: 'lucideArchive' },
     { id: 'settings', label: 'Settings', icon: 'lucideSettings' },
   ];
-  readonly themes: { id: ThemeMode; label: string }[] = [
-    { id: 'light', label: 'Light' },
-    { id: 'dark', label: 'Dark' },
-    { id: 'system', label: 'System' },
-  ];
 
   auth = inject(AuthService);
   state = inject(ChatStateService);
@@ -322,7 +306,6 @@ export class ChatShellPage {
   private toast = inject(ToastService);
   private router = inject(Router);
 
-  theme = inject(ThemeService);
   newChat = inject(NewChatService);
 
   filterText = signal('');
@@ -451,10 +434,6 @@ export class ChatShellPage {
     } catch {
       this.toast.error('Couldn’t update the archive.');
     }
-  }
-
-  async logout(): Promise<void> {
-    await this.auth.logout();
   }
 }
 
