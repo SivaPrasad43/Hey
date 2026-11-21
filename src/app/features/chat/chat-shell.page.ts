@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
 import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
 import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
+import { HlmTooltipImports } from '@spartan-ng/helm/tooltip';
 import { ThemeMode, ThemeService } from '../../core/theme.service';
 import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import { catchError, filter, map, of, switchMap } from 'rxjs';
@@ -41,12 +42,12 @@ interface RoomItem {
     imports: [
     RouterOutlet,
     RouterLink,
-    RouterLinkActive,
     NgIcon,
     HlmButtonImports,
     HlmDropdownMenuImports,
     HlmInputGroupImports,
     HlmSkeletonImports,
+    HlmTooltipImports,
     AvatarComponent,
     EmotionFaceComponent,
   ],
@@ -87,23 +88,33 @@ interface RoomItem {
           </hlm-input-group>
         </div>
 
-        <nav class="mt-5 flex flex-col gap-1 px-4 max-md:hidden" aria-label="Sections">
-          @for (s of sections; track s.id) {
-            <button
-              type="button"
-              class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex h-10 items-center gap-3 rounded-full px-4 text-sm font-medium transition-colors"
-              [class]="section() === s.id ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold' : 'text-muted-foreground'"
-              [attr.aria-pressed]="section() === s.id"
-              (click)="setSection(s.id)"
-            >
-              <ng-icon [name]="s.icon" class="text-muted-foreground" />
-              <span class="flex-1 text-left">{{ s.label }}</span>
-              @if (s.id === 'archive' && archiveUnread()) {
-                <span class="bg-primary size-1.5 rounded-full" aria-label="Unread in archive"></span>
-              }
-              <span class="text-muted-foreground text-xs tabular-nums">{{ counts()[s.id] }}</span>
-            </button>
-          }
+        <!-- desktop: section filters as a row of pill tabs -->
+        <nav class="mt-4 px-4 max-md:hidden" aria-label="Sections">
+          <div class="bg-muted flex gap-1 rounded-full p-1" role="tablist">
+            @for (s of sections; track s.id) {
+              <button
+                type="button"
+                role="tab"
+                class="relative flex h-8 min-w-0 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-[background-color,color,box-shadow,flex-grow] duration-200"
+                [class]="section() === s.id ? 'bg-background text-foreground shadow-soft grow-[2]' : 'text-muted-foreground hover:text-foreground grow'"
+                [attr.aria-selected]="section() === s.id"
+                [attr.aria-label]="s.label + ', ' + counts()[s.id]"
+                [hlmTooltip]="section() === s.id ? '' : s.label"
+                (click)="setSection(s.id)"
+              >
+                <ng-icon [name]="s.icon" size="15" />
+                @if (section() === s.id) {
+                  <span class="truncate">{{ s.label }}</span>
+                }
+                @if (counts()[s.id]) {
+                  <span class="tabular-nums opacity-60">{{ counts()[s.id] }}</span>
+                }
+                @if (s.id === 'archive' && archiveUnread()) {
+                  <span class="bg-primary ring-background absolute top-1 right-1.5 size-1.5 rounded-full ring-2" aria-label="Unread in archive"></span>
+                }
+              </button>
+            }
+          </div>
         </nav>
 
         <div class="mt-4 flex min-h-0 flex-1 flex-col max-md:mt-2">
@@ -180,15 +191,9 @@ interface RoomItem {
         </div>
 
         <div class="border-sidebar-border flex flex-col gap-1 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] max-md:hidden">
-          <a routerLink="/chat/settings" routerLinkActive="bg-sidebar-accent !text-foreground font-semibold" class="hover:bg-sidebar-accent text-muted-foreground flex h-10 items-center gap-3 rounded-full px-4 text-sm font-medium">
-            <ng-icon name="lucideSettings" class="text-muted-foreground" /> Settings
-          </a>
-          <a routerLink="/chat/help" routerLinkActive="bg-sidebar-accent !text-foreground font-semibold" class="hover:bg-sidebar-accent text-muted-foreground flex h-10 items-center gap-3 rounded-full px-4 text-sm font-medium">
-            <ng-icon name="lucideCircleHelp" class="text-muted-foreground" /> Help
-          </a>
           <button
             type="button"
-            class="hover:bg-sidebar-accent aria-expanded:bg-sidebar-accent mt-2 flex items-center gap-3 rounded-full p-1.5 pr-3 text-left"
+            class="hover:bg-sidebar-accent aria-expanded:bg-sidebar-accent flex items-center gap-3 rounded-full p-1.5 pr-3 text-left"
             [hlmDropdownMenuTrigger]="userMenu"
             side="top"
             align="start"

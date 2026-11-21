@@ -279,10 +279,12 @@ export interface EditEvent {
           </div>
         }
 
-        <!-- sender row under the run -->
+        <!-- under the run: who said it (only needed for other people in groups), and when -->
         <footer class="mt-1 flex items-center gap-2 px-1" [class.flex-row-reverse]="run().own">
-          <app-avatar size="sm" [name]="run().senderName" [uid]="run().senderId" [color]="color()" />
-          <span class="text-xs font-semibold">{{ run().own ? 'You' : run().senderName }}</span>
+          @if (showSender()) {
+            <app-avatar size="sm" [name]="run().senderName" [uid]="run().senderId" [color]="color()" />
+            <span class="text-xs font-semibold">{{ run().senderName }}</span>
+          }
           <time class="text-muted-foreground text-xs tabular-nums">{{ lastTime() }}</time>
         </footer>
       </div>
@@ -358,6 +360,8 @@ export class MessageGroupComponent {
   }
 
   isGroup = computed(() => this.room()?.type !== 'dm');
+  /** In a DM it's obvious who's who, and your own runs are already on the right: show names only for others in groups. */
+  showSender = computed(() => this.isGroup() && !this.run().own);
   lastTime = computed(() => this.run().items[this.run().items.length - 1]?.time ?? this.run().time);
 
   /** Bubble surface: yours filled with the feeling, others white with a feeling outline. */
