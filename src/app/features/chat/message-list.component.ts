@@ -35,6 +35,8 @@ import {
 
 const NEAR_BOTTOM_PX = 120;
 const LOAD_MORE_PX = 150;
+/** How far someone must scroll in one direction before the composer hides or comes back. */
+const DIRECTION_PX = 24;
 
 @Component({
     selector: 'app-message-list',
@@ -173,6 +175,8 @@ export class MessageListComponent implements AfterViewChecked {
   remove = output<DisplayMessage>();
   reply = output<DisplayMessage>();
   longPress = output<MessageMenuRequest>();
+  /** True while reading back through history (scrolling up), false when heading down or at the latest message. */
+  readingBack = output<boolean>();
   /** Message whose actions menu is open. */
   activeId = input<string | null>(null);
   editRequest = input<{ id: string; n: number } | null>(null);
@@ -211,6 +215,11 @@ export class MessageListComponent implements AfterViewChecked {
   private fromBottom = 0;
   private prevFirstId: string | null = null;
   private prevLastId: string | null = null;
+  /** Scroll position where the current up/down run started. */
+  private runStart = 0;
+  private runDir = 0;
+  private lastTop = 0;
+  private reading = false;
 
   constructor() {
     effect(() => {
@@ -244,6 +253,8 @@ export class MessageListComponent implements AfterViewChecked {
       if (p.smooth) setTimeout(() => (el.scrollTop = el.scrollHeight), 450);
     } else {
       el.scrollTop = el.scrollHeight - p.fromBottom;
+      // Anchoring after older messages load isn't the reader scrolling down.
+      this.lastTop = this.runStart = el.scrollTop;
     }
   }
 
@@ -264,8 +275,24 @@ export class MessageListComponent implements AfterViewChecked {
     const near = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_PX;
     this.atBottom.set(near);
     if (near) this.newCount.set(0);
+    this.trackDirection(el.scrollTop, near);
     if (el.scrollTop < LOAD_MORE_PX && this.hasMore() && !this.loadingOlder() && !this.loading()) {
       this.loadOlder.emit();
+    }
+  }
+
+  private trackDirection(top: number, near: boolean): void {
+    const dir = Math.sign(top - this.lastTop);
+    if (dir !== 0 && dir !== this.runDir) {
+      this.runDir = dir;
+      this.runStart = this.lastTop;
+    }
+    this.lastTop = top;
+    const moved = top - this.runStart;
+    const next = near ? false : moved < -DIRECTION_PX ? true : moved > DIRECTION_PX ? false : this.reading;
+    if (next !== this.reading) {
+      this.reading = next;
+      this.readingBack.emit(next);
     }
   }
 
@@ -277,6 +304,11 @@ export class MessageListComponent implements AfterViewChecked {
       this.pendingScroll = { kind: 'bottom', smooth: false };
       this.atBottom.set(true);
       this.newCount.set(0);
+      this.lastTop = this.runStart = 0;
+      if (this.reading) {
+        this.reading = false;
+        this.readingBack.emit(false);
+      }
       return;
     }
     const first = msgs[0]?.id ?? null;

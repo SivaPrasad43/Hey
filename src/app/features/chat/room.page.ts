@@ -129,26 +129,43 @@ import { recentMembers } from './recent-members';
         [activeId]="actionsFor()?.id ?? null"
         [editRequest]="editRequest()"
         [typers]="activeTypers()"
+        (readingBack)="readingBack.set($event)"
       />
 
-      <div class="px-3 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
-        <app-message-actions-sheet
-          [msg]="actionsFor()"
-          [at]="actionsAt()"
-          [meUid]="auth.uid()"
-          (closed)="closeActions()"
-          (react)="sheetReact($event)"
-          (act)="sheetAct($event)"
-        />
-        <app-composer
-          [roomName]="title()"
-          [replyTo]="replyTo()"
-          (cancelReply)="replyTo.set(null)"
-          (send)="send($event)"
-          (typing)="onTyping()"
-          (stoppedTyping)="onStopTyping()"
-          (focused)="keepLatestInView()"
-        />
+      <app-message-actions-sheet
+        [msg]="actionsFor()"
+        [at]="actionsAt()"
+        [meUid]="auth.uid()"
+        (closed)="closeActions()"
+        (react)="sheetReact($event)"
+        (act)="sheetAct($event)"
+      />
+      <!-- Slides away while reading back through history; returns on scroll down, at the latest message, or on focus. -->
+      <div
+        #composerWrap
+        class="grid shrink-0 transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none"
+        [class.grid-rows-[1fr]]="!composerHidden()"
+        [class.grid-rows-[0fr]]="composerHidden()"
+        [class.opacity-0]="composerHidden()"
+        (transitionend)="onComposerTransition($event)"
+        (focusin)="readingBack.set(false)"
+      >
+        <div class="min-h-0" [class.overflow-hidden]="composerClipped()" [attr.aria-hidden]="composerHidden() || null">
+          <div
+            class="px-3 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] transition-transform duration-300 ease-out motion-reduce:transition-none sm:px-6"
+            [class.translate-y-6]="composerHidden()"
+          >
+          <app-composer
+            [roomName]="title()"
+            [replyTo]="replyTo()"
+            (cancelReply)="replyTo.set(null)"
+            (send)="send($event)"
+            (typing)="onTyping()"
+            (stoppedTyping)="onStopTyping()"
+            (focused)="keepLatestInView()"
+          />
+          </div>
+        </div>
       </div>
     }
   `
@@ -168,6 +185,40 @@ export class RoomPage {
   shortcuts = inject(ShortcutsService);
   private confirm = inject(ConfirmService);
   private composer = viewChild(ComposerComponent);
+
+  /** The reader is scrolling up through history. */
+  readingBack = signal(false);
+  private composerWrap = viewChild<ElementRef<HTMLElement>>('composerWrap');
+  /** Hide the composer while reading back, unless someone is mid-message or replying. */
+  composerHidden = computed(() => this.readingBack() && !this.replyTo() && !this.composer()?.text().trim());
+  /** Clip while hidden and while it slides back in, so it never overlaps the messages; unclipped otherwise so its menus can open. */
+  private clipUntilShown = signal(false);
+  composerClipped = computed(() => this.composerHidden() || this.clipUntilShown());
+  private refocusOnShow = false;
+  private syncComposerFocus = effect(() => {
+    const hidden = this.composerHidden();
+    untracked(() => {
+      if (hidden) {
+        this.clipUntilShown.set(true);
+        // Don't leave focus (or a phone keyboard) on something you can't see.
+        const active = document.activeElement as HTMLElement | null;
+        if (active && this.composerWrap()?.nativeElement.contains(active)) {
+          this.refocusOnShow = matchMedia('(pointer: fine)').matches;
+          active.blur();
+        }
+      } else if (this.refocusOnShow) {
+        this.refocusOnShow = false;
+        this.composer()?.focus();
+      }
+    });
+  });
+
+  onComposerTransition(e: TransitionEvent): void {
+    if (e.target === e.currentTarget && e.propertyName === 'grid-template-rows' && !this.composerHidden()) {
+      this.clipUntilShown.set(false);
+    }
+  }
+
 
   private roomId$ = toObservable(this.roomId);
   private roomState = toSignal(
