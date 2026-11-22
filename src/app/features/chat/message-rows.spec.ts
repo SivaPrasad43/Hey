@@ -1,6 +1,6 @@
 import { Timestamp } from '@angular/fire/firestore';
 import { Message } from '../../core/models';
-import { buildRows, countReactions, newArrivals, reactionChips, reactionIncreases, timelineSegments } from './message-rows';
+import { buildRows, countReactions, newArrivals, reactionChips, reactionIncreases, minimapGradient, spanAt } from './message-rows';
 
 const at = (d: Date) => Timestamp.fromDate(d);
 let n = 0;
@@ -106,11 +106,27 @@ describe('emotion helpers', () => {
     expect(reactionIncreases(after, before)).toEqual([]);
   });
 
-  it('timelineSegments lays text messages out evenly', () => {
-    const segs = timelineSegments([msg('a', t, { mood: 'angry' }), msg('b', t, { type: 'system' }), msg('a', t, { mood: 'lovely', deleted: true }), msg('a', t, { mood: 'sad' })]);
-    expect(segs.map((s) => [s.mood, s.top, s.height])).toEqual([
-      ['angry', 0, 50],
-      ['sad', 50, 50],
-    ]);
+  it('minimapGradient scales spans to the track, with a crisp 1px break between messages', () => {
+    const spans = [
+      { id: 'a', mood: 'angry' as const, top: 100, height: 50 },
+      { id: 'b', mood: 'sad' as const, top: 200, height: 100 },
+    ];
+    expect(minimapGradient(spans, 400, 200)).toBe(
+      'linear-gradient(to bottom, transparent 0px 50px, var(--mood-angry) 50px 99px, transparent 99px 100px, var(--mood-sad) 100px 150px, transparent 150px)',
+    );
+    expect(minimapGradient([], 400, 200)).toBe('none');
+  });
+
+  it('spanAt finds the message at a content offset', () => {
+    const spans = [
+      { id: 'a', mood: 'calm' as const, top: 10, height: 20 },
+      { id: 'b', mood: 'calm' as const, top: 40, height: 20 },
+      { id: 'c', mood: 'calm' as const, top: 90, height: 20 },
+    ];
+    expect(spanAt(spans, 0)).toBe(0);
+    expect(spanAt(spans, 45)).toBe(1);
+    expect(spanAt(spans, 89)).toBe(1);
+    expect(spanAt(spans, 500)).toBe(2);
+    expect(spanAt([], 5)).toBe(-1);
   });
 });

@@ -150,24 +150,55 @@ export function reactionIncreases(prev: ReactionCounts | null, next: ReactionCou
   return keys;
 }
 
-export interface TimelineSegment {
+/** A message laid out on the emotion minimap, in scroll-content pixels. */
+export interface MinimapSpan {
   id: string;
   mood: MoodId;
-  label: string;
-  /** 0–100 */
+  /** Offset of the message from the top of the scroll content. */
   top: number;
   height: number;
 }
 
-/** One segment per visible text message, laid out evenly top to bottom. */
-export function timelineSegments(messages: readonly DisplayMessage[]): TimelineSegment[] {
-  const texts = messages.filter((m) => m.type === 'text' && !m.deleted && !m.pending);
-  const n = texts.length;
-  return texts.map((m, i) => ({
-    id: m.id,
-    mood: getMood(m.mood).id,
-    label: `${m.senderName} · ${getMood(m.mood).label}: ${m.text.length > 48 ? m.text.slice(0, 48) + '…' : m.text}`,
-    top: (i / n) * 100,
-    height: 100 / n,
-  }));
+/** Short tooltip / screen-reader text for a message on the minimap. */
+export function minimapLabel(m: Pick<DisplayMessage, 'senderName' | 'mood' | 'text' | 'type'>): string {
+  const text = m.type === 'text' ? m.text : 'Sticker';
+  return `${m.senderName} · ${getMood(m.mood).label}: ${text.length > 60 ? text.slice(0, 60) + '…' : text}`;
+}
+
+/**
+ * Hard-stop CSS gradient that paints each span in its mood colour, scaled from content height to the
+ * track height. Each span stretches down to the next one so the line reads as one continuous stroke,
+ * with a 1px break between messages when there is room for it.
+ */
+export function minimapGradient(spans: readonly MinimapSpan[], contentPx: number, trackPx: number): string {
+  if (!spans.length || contentPx <= 0 || trackPx <= 0) return 'none';
+  const k = trackPx / contentPx;
+  const stops: string[] = [];
+  let cursor = 0;
+  const px = (v: number) => `${Math.round(v * 10) / 10}px`;
+  spans.forEach((s, i) => {
+    const top = Math.max(cursor, s.top * k);
+    const nextTop = i + 1 < spans.length ? spans[i + 1].top * k : (s.top + s.height) * k;
+    let bottom = Math.max(top + 1, nextTop);
+    if (i + 1 < spans.length && bottom - top >= 3) bottom -= 1;
+    if (top > cursor) stops.push(`transparent ${px(cursor)} ${px(top)}`);
+    stops.push(`var(--mood-${s.mood}) ${px(top)} ${px(bottom)}`);
+    cursor = bottom;
+  });
+  stops.push(`transparent ${px(cursor)}`);
+  return `linear-gradient(to bottom, ${stops.join(', ')})`;
+}
+
+/** Index of the span covering (or nearest to) content offset `y`; -1 when there are none. */
+export function spanAt(spans: readonly MinimapSpan[], y: number): number {
+  if (!spans.length) return -1;
+  let lo = 0;
+  let hi = spans.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (spans[mid].top <= y) lo = mid;
+    else hi = mid - 1;
+  }
+  // Before the first message: snap to it.
+  return lo;
 }

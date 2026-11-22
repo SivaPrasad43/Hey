@@ -425,3 +425,11 @@ input:-webkit-autofill:focus {
     display: none;
   }
 }
+
+/* Scrollers that draw their own track (the chat's emotion minimap stands in for the scrollbar). */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

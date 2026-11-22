@@ -52,9 +52,10 @@ import { atmosphereEnabled } from '../../core/atmosphere-setting';
 import { atmosphere } from './mood-atmosphere';
 import { MoodAtmosphereComponent } from './mood-atmosphere.component';
 
+import { EmotionTimelineComponent } from './emotion-timeline.component';
 @Component({
     selector: 'app-room-page',
-    imports: [RouterLink, NgIcon, HlmButtonImports, HlmEmptyImports, HlmTooltipImports, AvatarComponent, ComposerComponent, MessageListComponent, RoomMoodComponent, EmotionFaceComponent, RoomInfoSheetComponent, MessageActionsSheetComponent, MoodAtmosphereComponent],
+    imports: [RouterLink, NgIcon, HlmButtonImports, HlmEmptyImports, HlmTooltipImports, AvatarComponent, ComposerComponent, MessageListComponent, RoomMoodComponent, EmotionFaceComponent, RoomInfoSheetComponent, MessageActionsSheetComponent, MoodAtmosphereComponent, EmotionTimelineComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: {
     class: 'flex h-full min-h-0 flex-col',
@@ -107,7 +108,7 @@ import { MoodAtmosphereComponent } from './mood-atmosphere.component';
       </header>
 
       <!-- Messages and composer share one mood-tinted backdrop. -->
-      <div class="relative flex min-h-0 flex-1 flex-col">
+      <div class="relative flex min-h-0 flex-1 flex-col" [style.--composer-h.px]="composerHeight()">
       @if (atmosphereOn() && !loading()) {
         <app-mood-atmosphere [weather]="weather()" />
       }
@@ -176,6 +177,15 @@ import { MoodAtmosphereComponent } from './mood-atmosphere.component';
           </div>
         </div>
       </div>
+      @if (!loading() && list(); as l) {
+        <!-- Runs the full height beside the composer on wide screens; stops above it on phones, where the composer is full width. -->
+        <app-emotion-timeline
+          class="absolute top-0 right-0 z-10 py-2 max-md:bottom-[var(--composer-h,0px)] md:right-1 md:bottom-0"
+          [messages]="l.visible()"
+          [scroller]="l.scrollerEl()"
+          (jump)="l.jumpTo($event)"
+        />
+      }
       </div>
     }
   `
@@ -199,12 +209,22 @@ export class RoomPage {
   /** The reader is scrolling up through history. */
   readingBack = signal(false);
   private composerWrap = viewChild<ElementRef<HTMLElement>>('composerWrap');
+  /** Live height of the composer area (0 while hidden), so the phone minimap can stop just above it. */
+  composerHeight = signal(0);
+  private trackComposerHeight = effect((onCleanup) => {
+    const el = this.composerWrap()?.nativeElement;
+    if (!el) return;
+    const ro = new ResizeObserver(() => this.composerHeight.set(Math.round(el.getBoundingClientRect().height)));
+    ro.observe(el);
+    onCleanup(() => ro.disconnect());
+  });
   /** Hide the composer while reading back, unless someone is mid-message or replying. */
   composerHidden = computed(() => this.readingBack() && !this.replyTo() && !this.composer()?.text().trim());
   /** Clip while hidden and while it slides back in, so it never overlaps the messages; unclipped otherwise so its menus can open. */
   private clipUntilShown = signal(false);
   composerClipped = computed(() => this.composerHidden() || this.clipUntilShown());
   private refocusOnShow = false;
+  private restoringFocus = false;
   private syncComposerFocus = effect(() => {
     const hidden = this.composerHidden();
     untracked(() => {
@@ -218,7 +238,10 @@ export class RoomPage {
         }
       } else if (this.refocusOnShow) {
         this.refocusOnShow = false;
+        // Restoring focus isn't the person tapping the box, so don't pull the view to the latest message.
+        this.restoringFocus = true;
         this.composer()?.focus();
+        this.restoringFocus = false;
       }
     });
   });
@@ -485,10 +508,11 @@ export class RoomPage {
     }
   }
 
-  private list = viewChild(MessageListComponent);
+  list = viewChild(MessageListComponent);
 
   /** When the on-screen keyboard opens, keep the newest message visible if we were near the bottom. */
   keepLatestInView(): void {
+    if (this.restoringFocus) return;
     const list = this.list();
     if (!list?.isNearBottom()) return;
     setTimeout(() => list.scrollToBottom(), 300);

@@ -20,7 +20,6 @@ import { HlmSpinnerImports } from '@spartan-ng/helm/spinner';
 import { EditEvent, MessageGroupComponent, MessageMenuRequest, ReactEvent } from './message-group.component';
 import { AppUser, Room } from '../../core/models';
 import { MoodId } from '../../core/moods';
-import { EmotionTimelineComponent } from './emotion-timeline.component';
 import { AvatarComponent } from '../../shared/ui/avatar.component';
 import { EmotionFaceComponent } from '../../shared/ui/emotion-face.component';
 import {
@@ -37,16 +36,24 @@ const NEAR_BOTTOM_PX = 120;
 const LOAD_MORE_PX = 150;
 /** How far someone must scroll in one direction before the composer hides or comes back. */
 const DIRECTION_PX = 24;
+/**
+ * Only hide the composer when this far from the bottom. Hiding makes the list taller, so it must not land
+ * back inside the near-bottom zone, or the composer would flicker in and out.
+ */
+const HIDE_MIN_PX = NEAR_BOTTOM_PX + 260;
+let listIds = 0;
 
 @Component({
     selector: 'app-message-list',
-    imports: [MessageGroupComponent, EmotionTimelineComponent, AvatarComponent, EmotionFaceComponent, NgIcon, HlmButtonImports, HlmEmptyImports, HlmSkeletonImports, HlmSpinnerImports],
+    imports: [MessageGroupComponent, AvatarComponent, EmotionFaceComponent, NgIcon, HlmButtonImports, HlmEmptyImports, HlmSkeletonImports, HlmSpinnerImports],
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'relative flex min-h-0 flex-1 flex-col' },
     template: `
     <div
       #scroller
+      [id]="scrollerId"
       class="relative flex-1 overflow-y-auto overscroll-contain"
+      [class.no-scrollbar]="!loading()"
       role="log"
       aria-live="polite"
       aria-relevant="additions"
@@ -138,13 +145,6 @@ const DIRECTION_PX = 24;
       </div>
     </div>
 
-    @if (!loading()) {
-      <app-emotion-timeline
-        class="absolute top-3 right-3 bottom-3 hidden md:block"
-        [messages]="visible()"
-        (jump)="jumpTo($event)"
-      />
-    }
 
     @if (showJump()) {
       <button
@@ -202,6 +202,8 @@ export class MessageListComponent implements AfterViewChecked {
   private seenReactions: ReactionCounts | null = null;
 
   private scroller = viewChild<ElementRef<HTMLElement>>('scroller');
+  scrollerEl = computed(() => this.scroller()?.nativeElement ?? null);
+  readonly scrollerId = `messages-${++listIds}`;
   private atBottom = signal(true);
   newCount = signal(0);
   showJump = computed(() => !this.atBottom());
@@ -275,13 +277,13 @@ export class MessageListComponent implements AfterViewChecked {
     const near = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_PX;
     this.atBottom.set(near);
     if (near) this.newCount.set(0);
-    this.trackDirection(el.scrollTop, near);
+    this.trackDirection(el.scrollTop, near, el.scrollHeight - el.scrollTop - el.clientHeight);
     if (el.scrollTop < LOAD_MORE_PX && this.hasMore() && !this.loadingOlder() && !this.loading()) {
       this.loadOlder.emit();
     }
   }
 
-  private trackDirection(top: number, near: boolean): void {
+  private trackDirection(top: number, near: boolean, fromBottom: number): void {
     const dir = Math.sign(top - this.lastTop);
     if (dir !== 0 && dir !== this.runDir) {
       this.runDir = dir;
@@ -289,7 +291,13 @@ export class MessageListComponent implements AfterViewChecked {
     }
     this.lastTop = top;
     const moved = top - this.runStart;
-    const next = near ? false : moved < -DIRECTION_PX ? true : moved > DIRECTION_PX ? false : this.reading;
+    const next = near
+      ? false
+      : moved < -DIRECTION_PX && fromBottom > HIDE_MIN_PX
+        ? true
+        : moved > DIRECTION_PX
+          ? false
+          : this.reading;
     if (next !== this.reading) {
       this.reading = next;
       this.readingBack.emit(next);
@@ -346,11 +354,12 @@ export class MessageListComponent implements AfterViewChecked {
     setTimeout(() => target.update((s) => new Set([...s].filter((k) => !keys.includes(k)))), 1500);
   }
 
-  /** Scroll a message into view and flash it (from the timeline). */
+  /** Scroll a message into view and flash it (from replies and the emotion timeline's keyboard steps). */
   jumpTo(id: string): void {
     const el = this.scroller()?.nativeElement.querySelector(`[data-mid="${CSS.escape(id)}"]`) as HTMLElement | null;
     if (!el) return;
-    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
     el.classList.remove('emo-flash');
     void el.offsetWidth;
     el.classList.add('emo-flash');
